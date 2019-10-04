@@ -1,0 +1,5 @@
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */

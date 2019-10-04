@@ -1,0 +1,41 @@
+{
+    "private": true,
+    "author": "Highsoft AS",
+    "description": "Simple search system",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "homepage": "https://github.com/highcharts/highsoft-search#readme",
+    "main": "./lib/index.js",
+    "name": "highsoft-search",
+    "version": "0.0.1",
+    "bin": {
+        "highsoft-search": "./bin/highsoft-search"
+    },
+    "bugs": {
+        "url": "https://github.com/highcharts/highsoft-search/issues"
+    },
+    "devDependencies": {
+        "@types/node": "^12.7.11",
+        "typescript": "^3.6.3"
+    },
+    "files": [
+        "./bin/",
+        "./client",
+        "./lib/",
+        "hssearch.json",
+        "LICENSE.md",
+        "README.md"
+    ],
+    "keywords": [
+        "Highsoft",
+        "search"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/highcharts/highsoft-search.git"
+    },
+    "scripts": {
+        "build": "npm run clean && tsc --build sources/client sources/lib",
+        "clean": "rm -rf client lib",
+        "test": "npm run build && ./bin/highsoft-search https://github.com/highcharts/highsoft-search"
+    }
+}

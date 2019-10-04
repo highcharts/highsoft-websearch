@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "allowUmdGlobalAccess": true,
+        "alwaysStrict": true,
+        "declaration": false,
+        "downlevelIteration": true,
+        // "esModuleInterop": true,
+        "noEmitOnError": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "preserveSymlinks": true,
+        "removeComments": true,
+        "sourceMap": false,
+        "strict": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "module": "umd",
+        "moduleResolution": "node",
+        "outDir": "./",
+        "rootDir": "./sources/",
+        "target": "es5"
+    },
+    "exclude": [
+        "./node_modules/**/*.*"
+    ]
+}
