@@ -4,11 +4,11 @@
  *
  * */
 
-import * as I from './index';
+import * as Inspectors from './index';
 
-const URL_INSPECTOR_PATTERN = /[\w\.\-]+/g;
+const KEYWORD_PATTERN = /\w[\w\.\-]*/;
 
-export class URLInspector extends I.Inspector {
+export class URLInspector extends Inspectors.Inspector {
 
     /* *
      *
@@ -18,12 +18,9 @@ export class URLInspector extends I.Inspector {
 
     public getKeywords (): Array<string> {
 
-        try {
-            return (URL_INSPECTOR_PATTERN.exec(this.content) || []);
-        }
-        finally {
-            URL_INSPECTOR_PATTERN.lastIndex = 0;
-        }
+        const keywordPattern = new RegExp(KEYWORD_PATTERN, 'gi');
+
+        return (this.content.match(keywordPattern) || []);
     }
 
     public getKeywordWeight (keyword: string): number {

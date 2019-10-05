@@ -4,9 +4,9 @@
  *
  * */
 
-import * as HTTP from 'http';
-import * as HTTPS from 'https';
-import * as L from '../index';
+import * as Http from 'http';
+import * as Https from 'https';
+import * as Inspectors from '../Inspectors/index';
 
 export class Download {
 
@@ -16,16 +16,33 @@ export class Download {
      *
      * */
 
-    public static fromURL(url: URL, depth: number, timeout: number): Promise<Download> {
+    public static fromURL(url: string, depth: number, timeout: number): Promise<Download> {
 
-        return new Promise(() => HTTPS.get(
+        return new Promise((resolve, reject) => {
+
+            const request = Https.get(
                 url.toString(),
                 {
                     method: 'GET',
                     timeout: timeout
                 },
-                (response) => new Download(url, depth, response)
-        ));
+                (response) => {
+
+                    let dataBuffer: Array<Buffer> = new Array<Buffer>();
+
+                    response.on('data', (data) => {
+                        dataBuffer.push(data);
+                    });
+                    response.on('end', () => {
+                        resolve(new Download(url, depth, response, Buffer.concat(dataBuffer)));
+                    });
+
+                    response.on('error', reject);
+                }
+            );
+
+            request.on('error', reject);
+        });
     }
 
     /* *
@@ -34,7 +51,8 @@ export class Download {
      *
      * */
 
-    private constructor (url: URL, depth: number, response: HTTP.IncomingMessage) {
+    private constructor (url: string, depth: number, response: Http.IncomingMessage, content: Buffer) {
+        this._content = content;
         this._depth = depth;
         this._response = response;
         this._url = url;
@@ -46,9 +64,14 @@ export class Download {
      *
      * */
 
+    private _content: Buffer;
     private _depth: number;
-    private _response: HTTP.IncomingMessage;
-    private _url: URL;
+    private _response: Http.IncomingMessage;
+    private _url: string;
+
+    public get content(): Buffer {
+        return this._content;
+    }
 
     public get depth(): number {
         return this._depth;
@@ -61,7 +84,7 @@ export class Download {
         return (typeof statusCode === 'undefined' || statusCode >= 400);
     }
 
-    public get url(): URL {
+    public get url(): string {
         return this._url;
     }
 
@@ -71,11 +94,35 @@ export class Download {
      *
      * */
 
-    public getInspectors(): Array<L.Inspector> {
+    public getContentText(): string {
 
-        const inspectors: Array<L.Inspector> = [];
+        let charset = this.getContentType()[1];
 
-        inspectors.push(new L.URLInspector(this._url.toString()));
+        if (typeof charset !== 'undefined') {
+            charset = (charset.split('=')[1] || '').trim();
+        }
+
+        return this._content.toString(charset || 'utf-8');
+    }
+
+    private getContentType(): Array<(string|undefined)> {
+        return (this._response.headers['content-type'] || '')
+            .split(';')
+            .map(parts => parts.trim())
+            .filter(parts => !!parts);
+    }
+
+    public getInspectors(): Array<Inspectors.Inspector> {
+
+        const inspectors: Array<Inspectors.Inspector> = [
+            new Inspectors.URLInspector(this._url.toString())
+        ];
+
+        switch (this.getContentType()[0]) {
+            case 'text/html':
+                inspectors.push(new Inspectors.HTMLInspector(this.getContentText()));
+                break;
+        }
 
         return inspectors;
     }

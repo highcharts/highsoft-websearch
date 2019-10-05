@@ -4,7 +4,7 @@
  *
  * */
 
-import * as FS from 'fs';
+import * as Fs from 'fs';
 
 export class Options {
 
@@ -48,7 +48,7 @@ export class Options {
     public static getOptionsFromFile (filePath: string, options: Options = new Options()): (Options|null|undefined) {
 
         try {
-            const file = FS.readFileSync(filePath);
+            const file = Fs.readFileSync(filePath);
 
             try {
 

@@ -5,8 +5,6 @@
  * */
 
 import * as CLI from './index';
-import * as L from '../index';
-
 
 export class Application {
 
@@ -47,9 +45,9 @@ export class Application {
             return;
         }
 
-        const url = L.URLUtilities.getURL(argv[argv.length-1]);
+        const url = argv[argv.length-1];
 
-        if (typeof url === 'undefined') {
+        if (typeof url === 'undefined' || !url.startsWith('http')) {
             Application.error('URL is invalid.');
             return;
         }
@@ -92,7 +90,7 @@ export class Application {
      *
      * */
 
-    private constructor (url: URL, options: CLI.Options) {
+    private constructor (url: string, options: CLI.Options) {
         this._options = options;
         this._url = url;
     }
@@ -104,7 +102,7 @@ export class Application {
      * */
 
     private _options: CLI.Options;
-    private _url: URL;
+    private _url: string;
 
     /* *
      *
@@ -121,7 +119,8 @@ export class Application {
         CLI.Download
             .fromURL(this._url, depth, timeout)
             .then(download => download.getInspectors())
-            .then(inspectors => console.log(inspectors));
+            .then(inspectors => console.log(inspectors[1].getKeywords()))
+            .catch(Application.error);
     }
 
 }
