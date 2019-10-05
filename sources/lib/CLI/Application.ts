@@ -5,6 +5,7 @@
  * */
 
 import * as CLI from './index';
+import * as Keywords from '../Keywords/index';
 
 export class Application {
 
@@ -114,12 +115,13 @@ export class Application {
 
         const options = this._options;
         const depth = options.depth;
+        const keywordFiles: Record<string, Keywords.KeywordFile> = {};
         const timeout = options.timeout;
 
-        CLI.Download
+        Keywords.KeywordDownload
             .fromURL(this._url, depth, timeout)
-            .then(download => download.getInspectors())
-            .then(inspectors => console.log(inspectors[1].getKeywords()))
+            .then(download => download.updateKeywordFiles(keywordFiles))
+            .then(() => console.log(keywordFiles))
             .catch(Application.error);
     }
 

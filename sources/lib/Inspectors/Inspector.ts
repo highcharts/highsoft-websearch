@@ -24,7 +24,7 @@ export abstract class Inspector {
 
     private _content: string;
 
-    public get content(): string {
+    protected get content (): string {
         return this._content;
     }
 
@@ -34,11 +34,11 @@ export abstract class Inspector {
      *
      * */
 
-    public abstract getKeywords(): Array<string>;
+    public abstract getKeywords (): Array<string>;
 
-    public abstract getKeywordWeight(keyword: string): number;
+    public abstract getKeywordWeight (keyword: string): number;
 
-    public abstract getLinks(): Array<string>;
+    public abstract getLinks (): Array<string>;
 
 }
 

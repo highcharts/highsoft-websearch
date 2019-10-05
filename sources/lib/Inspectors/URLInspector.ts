@@ -6,7 +6,7 @@
 
 import * as Inspectors from './index';
 
-const KEYWORD_PATTERN = /\w[\w\.\-]*/;
+const KEYWORD_PATTERN = /[A-z][\w\-]*/;
 
 export class URLInspector extends Inspectors.Inspector {
 
@@ -32,16 +32,12 @@ export class URLInspector extends Inspectors.Inspector {
             return 0;
         }
 
-        let index = 0;
+        let index = content.indexOf(keyword);
         let weight = 0;
 
         while (index !== -1) {
-
-            if (index > 0) {
-                weight += (100 - Math.round((index / length) * 100));
-            }
-
-            index = content.indexOf(keyword, index);
+            weight += (100 - Math.round((index / length) * 100));
+            index = content.indexOf(keyword, (index + keyword.length));
         }
 
         return weight;

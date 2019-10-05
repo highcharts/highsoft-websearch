@@ -12,7 +12,7 @@ import * as Inspectors from './index';
  *
  * */
 
-const KEYWORD_PATTERN = /(?:^|\s)(\w[\w\.\-]*)/;
+const KEYWORD_PATTERN = /(?:^|\s)([A-z][\w\-]*)/;
 const LINK_PATTERN = /href\s*=\s*(['"])([^\\1])\1/;
 const META_PATTERN = /<(head|noscript|script|style)[^>]*>.*<\/\\1>/;
 const TAG_PATTERN = /<[\/!]?[\w-]+[^>]*>/;
