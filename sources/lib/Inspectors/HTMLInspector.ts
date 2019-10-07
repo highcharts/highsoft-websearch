@@ -5,6 +5,7 @@
  * */
 
 import * as Inspectors from './index';
+import * as URL from 'url';
 
 /* *
  *
@@ -12,6 +13,7 @@ import * as Inspectors from './index';
  *
  * */
 
+const ID_PATTERN = /id\s*=\s*(['"])([^\\1])\1/
 const KEYWORD_PATTERN = /(?:^|\s)([A-z][\w\-]*)/;
 const LINK_PATTERN = /href\s*=\s*(['"])([^\\1])\1/;
 const META_PATTERN = /<(head|noscript|script|style)[^>]*>.*<\/\\1>/;
@@ -42,15 +44,31 @@ export class HTMLInspector extends Inspectors.Inspector {
      *
      * */
 
-    public static getText (html: string): string {
+    public static getBody (html: string): string {
 
         const metaPattern = new RegExp(META_PATTERN, 'gi');
+
+        return html.replace(metaPattern, ' ');
+    }
+
+    public static getText (html: string): string {
+
         const tagPattern = new RegExp(TAG_PATTERN, 'gi');
 
-        return html
-            .replace(metaPattern, ' ')
+        return HTMLInspector
+            .getBody(html)
             .replace(tagPattern, ' ');
     }
+
+    /* *
+     *
+     *  Properties
+     *
+     * */
+
+    private _keywords: (Array<string>|undefined);
+    private _linkAliases: (Array<string>|undefined);
+    private _links: (Array<string>|undefined);
 
     /* *
      *
@@ -59,6 +77,10 @@ export class HTMLInspector extends Inspectors.Inspector {
      * */
 
     public getKeywords (): Array<string> {
+
+        if (typeof this._keywords !== 'undefined') {
+            return this._keywords;
+        }
 
         const contentText = HTMLInspector.getText(this.content.toLowerCase());
         const keywordPattern = new RegExp(KEYWORD_PATTERN, 'gi');
@@ -76,6 +98,8 @@ export class HTMLInspector extends Inspectors.Inspector {
             }
         }
 
+        this._keywords = keywords;
+
         return keywords;
     }
 
@@ -87,12 +111,12 @@ export class HTMLInspector extends Inspectors.Inspector {
 
         let finalWeight = 0;
         let matchWeight = 0;
-        let tagMatch: (RegExpExecArray|null|undefined);
+        let match: (RegExpExecArray|null|undefined);
 
-        while ((tagMatch = tagPattern.exec(content)) !== null) {
+        while ((match = tagPattern.exec(content)) !== null) {
 
-            if (HTMLInspector.getText(tagMatch[2]).includes(keyword)) {
-                matchWeight = (TITLE_WEIGHT[tagMatch[1]] || 0);
+            if (HTMLInspector.getText(match[2]).includes(keyword)) {
+                matchWeight = (TITLE_WEIGHT[match[1]] || 0);
             }
 
             if (matchWeight > finalWeight) {
@@ -103,17 +127,58 @@ export class HTMLInspector extends Inspectors.Inspector {
         return finalWeight;
     }
 
-    public getLinks (): Array<string> {
+    public getLinkAliases (baseURL?: URL.URL): Array<string> {
 
-        const content = this.content;
+        if (typeof this._linkAliases !== 'undefined') {
+            return this._linkAliases;
+        }
+
+        const content = HTMLInspector.getBody(this.content);
+        const idPattern = new RegExp(ID_PATTERN, 'gi');
+        const linkAliases: Array<string> = [];
+
+        let match: (RegExpExecArray|null|undefined);
+        let matchURL: (URL.URL|undefined);
+
+        while ((match = idPattern.exec(content)) !== null) {
+            try {
+                matchURL = new URL.URL('#' + match[2], baseURL);
+                linkAliases.push(matchURL.toString());
+            }
+            catch (error) {
+                // silent fail
+            }
+        }
+        
+        this._linkAliases = linkAliases;
+
+        return linkAliases;
+    }
+
+    public getLinks (baseURL?: URL.URL): Array<string> {
+
+        if (typeof this._links !== 'undefined') {
+            return this._links;
+        }
+
+        const content = HTMLInspector.getBody(this.content);
         const linkPattern = new RegExp(LINK_PATTERN, 'gi');
         const links: Array<string> = [];
 
-        let linkMatch: (RegExpExecArray|null|undefined);
+        let match: (RegExpExecArray|null|undefined);
+        let matchURL: (URL.URL|undefined);
 
-        while ((linkMatch = linkPattern.exec(content)) !== null) {
-            links.push(linkMatch[2]);
+        while ((match = linkPattern.exec(content)) !== null) {
+            try {
+                matchURL = new URL.URL(match[2], baseURL);
+                links.push(matchURL.toString());
+            }
+            catch (error) {
+                // silent fail
+            }
         }
+
+        this._links = links;
 
         return links;
     }

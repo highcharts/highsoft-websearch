@@ -12,15 +12,29 @@ export class URLInspector extends Inspectors.Inspector {
 
     /* *
      *
+     *  Properties
+     *
+     * */
+
+    private _keywords: (Array<string>|undefined);
+
+    /* *
+     *
      *  Functions
      *
      * */
 
     public getKeywords (): Array<string> {
 
+        if (typeof this._keywords !== 'undefined') {
+            return this._keywords;
+        }
+
         const keywordPattern = new RegExp(KEYWORD_PATTERN, 'gi');
 
-        return (this.content.match(keywordPattern) || []);
+        this._keywords = (this.content.match(keywordPattern) || []);
+
+        return this._keywords;
     }
 
     public getKeywordWeight (keyword: string): number {
@@ -41,6 +55,10 @@ export class URLInspector extends Inspectors.Inspector {
         }
 
         return weight;
+    }
+
+    public getLinkAliases (): Array<string> {
+        return [];
     }
 
     public getLinks (): Array<string> {

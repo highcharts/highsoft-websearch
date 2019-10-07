@@ -36,6 +36,6 @@
     "scripts": {
         "build": "npm run clean && tsc --build sources/client sources/lib",
         "clean": "rm -rf client lib",
-        "test": "npm run build && ./bin/highsoft-search https://github.com/highcharts/highsoft-search"
+        "test": "npm run build && ./bin/highsoft-search https://api.highcharts.com/"
     }
 }

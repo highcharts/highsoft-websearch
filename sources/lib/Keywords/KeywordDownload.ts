@@ -4,10 +4,11 @@
  *
  * */
 
-import * as Http from 'http';
-import * as Https from 'https';
+import * as HTTP from 'http';
+import * as HTTPS from 'https';
 import * as Inspectors from '../Inspectors/index';
 import * as Keywords from './index';
+import * as URL from 'url';
 
 export class KeywordDownload {
 
@@ -17,32 +18,59 @@ export class KeywordDownload {
      *
      * */
 
-    public static fromURL (url: string, depth: number, timeout: number): Promise<KeywordDownload> {
+    public static fromURL (url: URL.URL, depth: number, timeout: number): Promise<KeywordDownload> {
 
         return new Promise((resolve, reject) => {
 
-            const request = Https.get(
-                url.toString(),
-                {
-                    method: 'GET',
-                    timeout: timeout
-                },
-                (response) => {
+            const handler = (response: HTTP.IncomingMessage) => {
 
-                    let dataBuffer: Array<Buffer> = new Array<Buffer>();
+                let dataBuffer: Array<Buffer> = new Array<Buffer>();
 
-                    response.on('data', (data) => {
-                        dataBuffer.push(data);
-                    });
-                    response.on('end', () => {
-                        resolve(new KeywordDownload(url, depth, response, Buffer.concat(dataBuffer)));
-                    });
+                response.on('data', (data) => {
+                    dataBuffer.push(data);
+                });
+                response.on('end', () => {
 
-                    response.on('error', reject);
-                }
-            );
+                    const statusCode = (response.statusCode || 200);
+                    const location = response.headers['location'];
 
-            request.on('error', reject);
+                    if (
+                        statusCode >= 300 &&
+                        statusCode <= 399 &&
+                        location
+                    ) {
+                        try {
+
+                            url = new URL.URL(location, url);
+
+                            KeywordDownload
+                                .fromURL(url, depth, timeout)
+                                .then(resolve);
+
+                            return;
+                        }
+                        catch (error) {
+                            // silent fail
+                        }
+                    }
+
+                    resolve(new KeywordDownload(url, depth, response, Buffer.concat(dataBuffer)));
+                });
+
+                response.on('error', reject);
+            };
+
+            const options = {
+                method: 'GET',
+                timeout: timeout
+            };
+
+            if (url.protocol === 'https:') {
+                HTTPS.get(url, options, handler).on('error', reject);
+            }
+            else {
+                HTTP.get(url, options, handler).on('error', reject);
+            }
         });
     }
 
@@ -52,7 +80,7 @@ export class KeywordDownload {
      *
      * */
 
-    private constructor (url: string, depth: number, response: Http.IncomingMessage, content: Buffer) {
+    private constructor (url: URL.URL, depth: number, response: HTTP.IncomingMessage, content: Buffer) {
         this._content = content;
         this._depth = depth;
         this._response = response;
@@ -67,8 +95,8 @@ export class KeywordDownload {
 
     private _content: Buffer;
     private _depth: number;
-    private _response: Http.IncomingMessage;
-    private _url: string;
+    private _response: HTTP.IncomingMessage;
+    private _url: URL.URL;
 
     public get depth (): number {
         return this._depth;
@@ -81,7 +109,7 @@ export class KeywordDownload {
         return (typeof statusCode === 'undefined' || statusCode >= 400);
     }
 
-    public get url (): string {
+    public get url (): URL.URL {
         return this._url;
     }
 
@@ -90,6 +118,54 @@ export class KeywordDownload {
      *  Functions
      *
      * */
+
+    public addKeywordFiles (keywordFiles: Record<string, Keywords.KeywordFile>): void {
+
+        const inspectors = this.getInspectors();
+        const linkAliases: Array<string> = [];
+        const url = this.url;
+
+        let keywordFile: Keywords.KeywordFile;
+        let keywords: Array<string>;
+
+        for (let inspector of inspectors) {
+
+            keywords = inspector.getKeywords().filter(Keywords.KeywordFilter.commonFilter);
+
+            for (let keyword of keywords) {
+
+                keywordFile = keywordFiles[keyword];
+                
+                if (typeof keywordFile === 'undefined') {
+                    keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
+                }
+
+                keywordFile.addURL(url.toString(), inspector.getKeywordWeight(keyword));
+                linkAliases.push(...inspector.getLinkAliases(url));
+            }
+        }
+
+        this.addLinkAliasesToKeywordFiles(linkAliases, keywordFiles);
+    }
+
+    private addLinkAliasesToKeywordFiles (linkAliases: Array<string>, keywordFiles: Record<string, Keywords.KeywordFile>): void {
+
+        let keywordFile: Keywords.KeywordFile;
+        let keywords: Array<string>;
+        let inspector: Inspectors.URLInspector;
+
+        for (let linkAlias of linkAliases) {
+
+            inspector = new Inspectors.URLInspector(linkAlias);
+            keywords = inspector.getKeywords();
+
+            for (let keyword of keywords) {
+
+                keywordFile = keywordFiles[keyword];
+                keywordFile.addURL(linkAlias, inspector.getKeywordWeight(keyword));
+            }
+        }
+    }
 
     private getContentText (): string {
 
@@ -112,7 +188,7 @@ export class KeywordDownload {
     private getInspectors (): Array<Inspectors.Inspector> {
 
         const inspectors: Array<Inspectors.Inspector> = [
-            new Inspectors.URLInspector(this.url)
+            new Inspectors.URLInspector(this.url.toString())
         ];
 
         switch (this.getContentType()[0]) {
@@ -122,31 +198,6 @@ export class KeywordDownload {
         }
 
         return inspectors;
-    }
-
-    public updateKeywordFiles (keywordFiles: Record<string, Keywords.KeywordFile>): void {
-
-        const inspectors = this.getInspectors();
-        const url = this.url;
-
-        let keywordFile: Keywords.KeywordFile;
-        let keywords: Array<string> = [];
-
-        for (let inspector of inspectors) {
-
-            keywords = inspector.getKeywords().filter(Keywords.KeywordFilter.commonFilter);
-
-            for (let keyword of keywords) {
-
-                keywordFile = keywordFiles[keyword];
-                
-                if (typeof keywordFile === 'undefined') {
-                    keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
-                }
-
-                keywordFile.addURL(url, inspector.getKeywordWeight(keyword));
-            }
-        }
     }
 }
 

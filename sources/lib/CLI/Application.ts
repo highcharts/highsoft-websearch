@@ -6,6 +6,7 @@
 
 import * as CLI from './index';
 import * as Keywords from '../Keywords/index';
+import * as URL from 'url';
 
 export class Application {
 
@@ -46,9 +47,12 @@ export class Application {
             return;
         }
 
-        const url = argv[argv.length-1];
-
-        if (typeof url === 'undefined' || !url.startsWith('http')) {
+        let url: URL.URL;
+        
+        try {
+            url = new URL.URL(argv[argv.length-1]);
+        }
+        catch (error) {
             Application.error('URL is invalid.');
             return;
         }
@@ -91,7 +95,7 @@ export class Application {
      *
      * */
 
-    private constructor (url: string, options: CLI.Options) {
+    private constructor (url: URL.URL, options: CLI.Options) {
         this._options = options;
         this._url = url;
     }
@@ -103,7 +107,7 @@ export class Application {
      * */
 
     private _options: CLI.Options;
-    private _url: string;
+    private _url: URL.URL;
 
     /* *
      *
@@ -120,7 +124,7 @@ export class Application {
 
         Keywords.KeywordDownload
             .fromURL(this._url, depth, timeout)
-            .then(download => download.updateKeywordFiles(keywordFiles))
+            .then(download => download.addKeywordFiles(keywordFiles))
             .then(() => console.log(keywordFiles))
             .catch(Application.error);
     }
