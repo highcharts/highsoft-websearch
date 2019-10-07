@@ -5,8 +5,9 @@
  * */
 
 import * as Inspectors from './index';
+import * as Keywords from '../Keywords/index';
 
-const KEYWORD_PATTERN = /[A-z][\w\-]*/;
+const KEYWORD_PATTERN = /[A-z]\w*/;
 
 export class URLInspector extends Inspectors.Inspector {
 
@@ -30,31 +31,49 @@ export class URLInspector extends Inspectors.Inspector {
             return this._keywords;
         }
 
-        const keywordPattern = new RegExp(KEYWORD_PATTERN, 'gi');
+        const words = Keywords.KeywordFilter.getWords(this.content);
 
-        this._keywords = (this.content.match(keywordPattern) || []);
+        let keywords: Array<string> = [];
+        let word: string;
 
-        return this._keywords;
+        for (word of words) {
+            if (!keywords.includes(word)) {
+                keywords.push(word);
+            }
+        }
+
+        this._keywords = keywords = keywords.filter(Keywords.KeywordFilter.commonFilter);
+
+        return keywords;
     }
 
     public getKeywordWeight (keyword: string): number {
 
         const content = this.content;
-        const length = content.length;
+
+        let length = content.length;
 
         if (length === 0) {
             return 0;
         }
 
-        let index = content.indexOf(keyword);
-        let weight = 0;
+        const index = content.indexOf(keyword);
 
-        while (index !== -1) {
-            weight += (100 - Math.round((index / length) * 100));
-            index = content.indexOf(keyword, (index + keyword.length));
+        if (length > 100) {
+            length = 100;
         }
 
-        return weight;
+        if (
+            index === -1 ||
+            index > length
+        ) {
+            return 0;
+        }
+
+        const indexWeight = (100 - Math.round((index / length) * 100));
+        const lengthWeight = (100 - Math.round((length / 100) * 100));
+
+        return Math.round(((indexWeight * 25) + (lengthWeight * 75)) / 100);
     }
 
     public getLinkAliases (): Array<string> {

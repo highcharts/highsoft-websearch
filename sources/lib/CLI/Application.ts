@@ -16,7 +16,7 @@ export class Application {
      *
      * */
 
-    private static error (message?: string, exitCode: number = 1): never {
+    private static error (message?: (string|Error), exitCode: number = 1): never {
 
         if (typeof message !== 'undefined') {
 
@@ -26,8 +26,16 @@ export class Application {
                 writeStream = process.stdout;
             }
 
-            writeStream.write(message);
+            writeStream.write(message.toString());
             writeStream.write('\n');
+
+            if (
+                message instanceof Error &&
+                message.stack
+            ) {
+                writeStream.write(message.stack);
+                writeStream.write('\n');
+            }
         }
 
         return process.exit(exitCode);
@@ -35,7 +43,7 @@ export class Application {
 
     public static main (): void {
 
-        const argv = process.argv.map(CLI.Arguments.argumentMapper);
+        const argv = process.argv.map(CLI.Options.argumentMapper);
 
         if (argv.includes('--help') || argv.length === 0) {
             Application.success(CLI.HELP);
@@ -48,7 +56,7 @@ export class Application {
         }
 
         let url: URL.URL;
-        
+
         try {
             url = new URL.URL(argv[argv.length-1]);
         }
@@ -96,6 +104,8 @@ export class Application {
      * */
 
     private constructor (url: URL.URL, options: CLI.Options) {
+        this._keywordFiles = {};
+        this._links = [];
         this._options = options;
         this._url = url;
     }
@@ -106,6 +116,8 @@ export class Application {
      *
      * */
 
+    private _keywordFiles: Record<string, Keywords.KeywordFile>;
+    private _links: Array<string>;
     private _options: CLI.Options;
     private _url: URL.URL;
 
@@ -115,17 +127,40 @@ export class Application {
      *
      * */
 
-    private run(): void {
+    private download (url: URL.URL, depth: number): Promise<void> {
 
-        const options = this._options;
-        const depth = options.depth;
-        const keywordFiles: Record<string, Keywords.KeywordFile> = {};
-        const timeout = options.timeout;
+        return Keywords.KeywordDownload
+            .fromURL(url, depth, this._options.timeout)
+            .then(download => {
+                download.addKeywordFiles(this._keywordFiles, (depth > 1 ? this._links : undefined));
+            });
+    }
 
-        Keywords.KeywordDownload
-            .fromURL(this._url, depth, timeout)
-            .then(download => download.addKeywordFiles(keywordFiles))
-            .then(() => console.log(keywordFiles))
+    private run (): void {
+
+        const depth = this._options.depth;
+        const downloads: Array<Promise<void>> = [];
+        const links = this._links;
+
+        links.push(this._url.toString());
+
+        let link: (string|undefined);
+        let url: (URL.URL|undefined);
+
+        while (typeof (link = links.shift()) === 'string') {
+            try {
+
+                url = new URL.URL(link);
+                downloads.push(this.download(new URL.URL(link), depth));
+            }
+            catch (error) {
+                // silent fail
+            }
+        }
+
+        Promise
+            .all(downloads)
+            .then(() => console.log(this._keywordFiles))
             .catch(Application.error);
     }
 

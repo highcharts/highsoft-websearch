@@ -83,6 +83,7 @@ export class KeywordDownload {
     private constructor (url: URL.URL, depth: number, response: HTTP.IncomingMessage, content: Buffer) {
         this._content = content;
         this._depth = depth;
+        this._links = [];
         this._response = response;
         this._url = url;
     }
@@ -95,6 +96,7 @@ export class KeywordDownload {
 
     private _content: Buffer;
     private _depth: number;
+    private _links: Array<string>;
     private _response: HTTP.IncomingMessage;
     private _url: URL.URL;
 
@@ -119,20 +121,35 @@ export class KeywordDownload {
      *
      * */
 
-    public addKeywordFiles (keywordFiles: Record<string, Keywords.KeywordFile>): void {
+    public addKeywordFiles (keywordFiles: Record<string, Keywords.KeywordFile>, links?: Array<string>): void {
 
         const inspectors = this.getInspectors();
         const linkAliases: Array<string> = [];
-        const url = this.url;
+        const url = this.url.toString();
 
-        let keywordFile: Keywords.KeywordFile;
-        let keywords: Array<string>;
+        let inspector: (Inspectors.Inspector|undefined);
+        let inspectorLinks: (Array<string>|undefined);
+        let keyword: (string|undefined);
+        let keywordFile: (Keywords.KeywordFile|undefined);
+        let keywords: (Array<string>|undefined);
+        let linkAlias: (string|undefined);
 
-        for (let inspector of inspectors) {
+        for (inspector of inspectors) {
 
-            keywords = inspector.getKeywords().filter(Keywords.KeywordFilter.commonFilter);
+            if (typeof links !== 'undefined') {
 
-            for (let keyword of keywords) {
+                inspectorLinks = inspector.getLinks(url)
+
+                for (let inspectorLink of inspectorLinks) {
+                    if (!links.includes(inspectorLink)) {
+                        links.push(inspectorLink);
+                    }
+                }
+            }
+
+            keywords = inspector.getKeywords();
+
+            for (keyword of keywords) {
 
                 keywordFile = keywordFiles[keyword];
                 
@@ -140,49 +157,35 @@ export class KeywordDownload {
                     keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
                 }
 
-                keywordFile.addURL(url.toString(), inspector.getKeywordWeight(keyword));
+                keywordFile.addURL(url, inspector.getKeywordWeight(keyword));
                 linkAliases.push(...inspector.getLinkAliases(url));
             }
         }
 
-        this.addLinkAliasesToKeywordFiles(linkAliases, keywordFiles);
-    }
+        for (linkAlias of linkAliases) {
 
-    private addLinkAliasesToKeywordFiles (linkAliases: Array<string>, keywordFiles: Record<string, Keywords.KeywordFile>): void {
-
-        let keywordFile: Keywords.KeywordFile;
-        let keywords: Array<string>;
-        let inspector: Inspectors.URLInspector;
-
-        for (let linkAlias of linkAliases) {
-
-            inspector = new Inspectors.URLInspector(linkAlias);
+            inspector = new Inspectors.URLInspector(linkAlias.toString());
             keywords = inspector.getKeywords();
 
-            for (let keyword of keywords) {
+            for (keyword of keywords) {
 
                 keywordFile = keywordFiles[keyword];
+
+                if (typeof keywordFile === 'undefined') {
+                    keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
+                }
+
                 keywordFile.addURL(linkAlias, inspector.getKeywordWeight(keyword));
             }
         }
     }
 
     private getContentText (): string {
-
-        let charset = this.getContentType()[1];
-
-        if (typeof charset !== 'undefined') {
-            charset = (charset.split('=')[1] || '').trim();
-        }
-
-        return this._content.toString(charset || 'utf-8');
+        return this._content.toString('utf8');
     }
 
-    private getContentType (): Array<(string|undefined)> {
-        return (this._response.headers['content-type'] || '')
-            .split(';')
-            .map(parts => parts.trim())
-            .filter(parts => !!parts);
+    private getContentType (): string {
+        return (this._response.headers['content-type'] || '').split(';')[0];
     }
 
     private getInspectors (): Array<Inspectors.Inspector> {
@@ -191,7 +194,7 @@ export class KeywordDownload {
             new Inspectors.URLInspector(this.url.toString())
         ];
 
-        switch (this.getContentType()[0]) {
+        switch (this.getContentType()) {
             case 'text/html':
                 inspectors.push(new Inspectors.HTMLInspector(this.getContentText()));
                 break;

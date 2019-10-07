@@ -5,6 +5,7 @@
  * */
 
 import * as Inspectors from './index';
+import * as Keywords from '../Keywords/index';
 import * as URL from 'url';
 
 /* *
@@ -13,10 +14,9 @@ import * as URL from 'url';
  *
  * */
 
-const ID_PATTERN = /id\s*=\s*(['"])([^\\1])\1/
-const KEYWORD_PATTERN = /(?:^|\s)([A-z][\w\-]*)/;
-const LINK_PATTERN = /href\s*=\s*(['"])([^\\1])\1/;
-const META_PATTERN = /<(head|noscript|script|style)[^>]*>.*<\/\\1>/;
+const ID_PATTERN = /id\s*=\s*(['"])(.*?)\1/
+const LINK_PATTERN = /href\s*=\s*(['"])(.*?)\1/;
+const META_PATTERN = /<(head|noscript|script|style)[^>]*>.*?<\/\1>/;
 const TAG_PATTERN = /<[\/!]?[\w-]+[^>]*>/;
 const TITLE_WEIGHT: Record<string, number> = {
     title: 100,
@@ -82,23 +82,20 @@ export class HTMLInspector extends Inspectors.Inspector {
             return this._keywords;
         }
 
-        const contentText = HTMLInspector.getText(this.content.toLowerCase());
-        const keywordPattern = new RegExp(KEYWORD_PATTERN, 'gi');
-        const keywords: Array<string> = [];
+        const words = Keywords.KeywordFilter.getWords(
+            HTMLInspector.getText(this.content.toLowerCase())
+        );
 
-        let keyword: string;
-        let keywordMatch: (RegExpExecArray|null);
+        let keywords: Array<string> = [];
+        let word: string;
 
-        while ((keywordMatch = keywordPattern.exec(contentText)) !== null) {
-
-            keyword = keywordMatch[1];
-
-            if (!keywords.includes(keyword)) {
-                keywords.push(keyword);
+        for (word of words) {
+            if (!keywords.includes(word)) {
+                keywords.push(word);
             }
         }
 
-        this._keywords = keywords;
+        this._keywords = keywords = keywords.filter(Keywords.KeywordFilter.commonFilter);
 
         return keywords;
     }
@@ -127,7 +124,7 @@ export class HTMLInspector extends Inspectors.Inspector {
         return finalWeight;
     }
 
-    public getLinkAliases (baseURL?: URL.URL): Array<string> {
+    public getLinkAliases (baseURL?: string): Array<string> {
 
         if (typeof this._linkAliases !== 'undefined') {
             return this._linkAliases;
@@ -139,11 +136,16 @@ export class HTMLInspector extends Inspectors.Inspector {
 
         let match: (RegExpExecArray|null|undefined);
         let matchURL: (URL.URL|undefined);
+        let matchURLString: (string|undefined);
 
         while ((match = idPattern.exec(content)) !== null) {
             try {
                 matchURL = new URL.URL('#' + match[2], baseURL);
-                linkAliases.push(matchURL.toString());
+                matchURLString = matchURL.toString();
+
+                if (!linkAliases.includes(matchURLString)) {
+                    linkAliases.push(matchURL.toString());
+                }
             }
             catch (error) {
                 // silent fail
@@ -155,7 +157,7 @@ export class HTMLInspector extends Inspectors.Inspector {
         return linkAliases;
     }
 
-    public getLinks (baseURL?: URL.URL): Array<string> {
+    public getLinks (baseURL?: string): Array<string> {
 
         if (typeof this._links !== 'undefined') {
             return this._links;
@@ -167,11 +169,16 @@ export class HTMLInspector extends Inspectors.Inspector {
 
         let match: (RegExpExecArray|null|undefined);
         let matchURL: (URL.URL|undefined);
+        let matchURLString: string;
 
         while ((match = linkPattern.exec(content)) !== null) {
             try {
                 matchURL = new URL.URL(match[2], baseURL);
-                links.push(matchURL.toString());
+                matchURLString = matchURL.toString();
+
+                if (!links.includes(matchURLString)) {
+                    links.push(matchURL.toString());
+                }
             }
             catch (error) {
                 // silent fail

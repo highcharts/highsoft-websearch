@@ -4,7 +4,7 @@
  *
  * */
 
-import * as Fs from 'fs';
+import * as FS from 'fs';
 
 export class Options {
 
@@ -13,6 +13,18 @@ export class Options {
      *  Static Functions
      *
      * */
+
+    public static argumentMapper (argv: string): string {
+
+        switch (argv) {
+            case '-h':
+                return '--help';
+            case '-v':
+                return '--version';
+        }
+
+        return argv;
+    }
 
     public static getOptionsFromArguments (argv: Array<string>, options: Options = new Options()): (Options|null) {
 
@@ -31,6 +43,10 @@ export class Options {
                         arg = argv[++i];
                         options._depth = parseInt(arg);
                         continue;
+                    case '--out':
+                        arg = argv[++i]
+                        options._out = arg;
+                        continue;
                     case '--timeout':
                         arg = argv[++i];
                         options._timeout = parseInt(arg);
@@ -48,7 +64,7 @@ export class Options {
     public static getOptionsFromFile (filePath: string, options: Options = new Options()): (Options|null|undefined) {
 
         try {
-            const file = Fs.readFileSync(filePath);
+            const file = FS.readFileSync(filePath);
 
             try {
 
@@ -88,6 +104,7 @@ export class Options {
     private constructor () {
         this._allowForeignDomains = false;
         this._depth = 1;
+        this._out = process.cwd();
         this._timeout = 60000;
     }
 
@@ -99,6 +116,7 @@ export class Options {
 
     private _allowForeignDomains: boolean;
     private _depth: number;
+    private _out: string;
     private _timeout: number;
 
     public get allowForeignDomains (): boolean {
@@ -107,6 +125,10 @@ export class Options {
 
     public get depth (): number {
         return this._depth;
+    }
+
+    public get out (): string {
+        return this._out;
     }
 
     public get timeout (): number {
@@ -124,6 +146,7 @@ export interface OptionsJSON {
     discoveryOptions?: {
         allowForeignDomains?: boolean;
         depth?: number;
+        out?: string;
         timeout?: number;
     }
 }

@@ -40,9 +40,9 @@ export abstract class Inspector {
 
     public abstract getKeywordWeight (keyword: string): number;
 
-    public abstract getLinkAliases (baseURL?: URL.URL): Array<string>;
+    public abstract getLinkAliases (baseURL?: string): Array<string>;
 
-    public abstract getLinks (baseURL?: URL.URL): Array<string>;
+    public abstract getLinks (baseURL?: string): Array<string>;
 
 }
 
