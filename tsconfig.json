@@ -18,11 +18,10 @@
         "strictFunctionTypes": true,
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
-        "module": "umd",
+        "module": "commonjs",
         "moduleResolution": "node",
         "outDir": "./",
         "rootDir": "./sources/",
-        "target": "es2015"
     },
     "exclude": [
         "./node_modules/**/*.*"

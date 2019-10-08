@@ -4,8 +4,6 @@
  *
  * */
 
-import * as URL from 'url';
-
 export abstract class Inspector {
 
     /* *

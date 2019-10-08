@@ -7,10 +7,9 @@
 import * as HTTP from 'http';
 import * as HTTPS from 'https';
 import * as Inspectors from '../Inspectors/index';
-import * as Keywords from './index';
-import * as URL from 'url';
+import * as Keywords from '../Keywords/index';
 
-export class KeywordDownload {
+export class Download {
 
     /* *
      *
@@ -18,7 +17,7 @@ export class KeywordDownload {
      *
      * */
 
-    public static fromURL (url: URL.URL, depth: number, timeout: number): Promise<KeywordDownload> {
+    public static fromURL (url: URL, timeout: number = 60000): Promise<Download> {
 
         return new Promise((resolve, reject) => {
 
@@ -41,10 +40,10 @@ export class KeywordDownload {
                     ) {
                         try {
 
-                            url = new URL.URL(location, url);
+                            url = new URL(location, url);
 
-                            KeywordDownload
-                                .fromURL(url, depth, timeout)
+                            Download
+                                .fromURL(url, timeout)
                                 .then(resolve);
 
                             return;
@@ -54,7 +53,7 @@ export class KeywordDownload {
                         }
                     }
 
-                    resolve(new KeywordDownload(url, depth, response, Buffer.concat(dataBuffer)));
+                    resolve(new Download(url, response, Buffer.concat(dataBuffer)));
                 });
 
                 response.on('error', reject);
@@ -80,11 +79,12 @@ export class KeywordDownload {
      *
      * */
 
-    private constructor (url: URL.URL, depth: number, response: HTTP.IncomingMessage, content: Buffer) {
+    private constructor (url: URL, response: HTTP.IncomingMessage, content: Buffer) {
         this._content = content;
-        this._depth = depth;
+        this._contentType = (response.headers['content-type'] || '').split(';')[0];
         this._links = [];
         this._response = response;
+        this._statusCode = (response.statusCode || 500);
         this._url = url;
     }
 
@@ -95,13 +95,18 @@ export class KeywordDownload {
      * */
 
     private _content: Buffer;
-    private _depth: number;
+    private _contentType: string;
     private _links: Array<string>;
     private _response: HTTP.IncomingMessage;
-    private _url: URL.URL;
+    private _statusCode: number;
+    private _url: URL;
 
-    public get depth (): number {
-        return this._depth;
+    public get content (): string {
+        return this._content.toString();
+    }
+
+    public get contentType (): string {
+        return this._contentType;
     }
 
     public get hasFailed (): boolean {
@@ -111,7 +116,11 @@ export class KeywordDownload {
         return (typeof statusCode === 'undefined' || statusCode >= 400);
     }
 
-    public get url (): URL.URL {
+    public get statusCode(): number {
+        return this._statusCode;
+    }
+
+    public get url (): URL {
         return this._url;
     }
 
@@ -157,7 +166,7 @@ export class KeywordDownload {
                     keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
                 }
 
-                keywordFile.addURL(url, inspector.getKeywordWeight(keyword));
+                keywordFile.addURL(url, inspector.getKeywordWeight(keyword), '');
                 linkAliases.push(...inspector.getLinkAliases(url));
             }
         }
@@ -175,17 +184,9 @@ export class KeywordDownload {
                     keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
                 }
 
-                keywordFile.addURL(linkAlias, inspector.getKeywordWeight(keyword));
+                keywordFile.addURL(linkAlias, inspector.getKeywordWeight(keyword), '');
             }
         }
-    }
-
-    private getContentText (): string {
-        return this._content.toString('utf8');
-    }
-
-    private getContentType (): string {
-        return (this._response.headers['content-type'] || '').split(';')[0];
     }
 
     private getInspectors (): Array<Inspectors.Inspector> {
@@ -194,9 +195,9 @@ export class KeywordDownload {
             new Inspectors.URLInspector(this.url.toString())
         ];
 
-        switch (this.getContentType()) {
+        switch (this.contentType) {
             case 'text/html':
-                inspectors.push(new Inspectors.HTMLInspector(this.getContentText()));
+                inspectors.push(new Inspectors.HTMLInspector(this.content));
                 break;
         }
 
@@ -204,4 +205,4 @@ export class KeywordDownload {
     }
 }
 
-export default KeywordDownload;
+export default Download;

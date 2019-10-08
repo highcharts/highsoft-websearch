@@ -6,7 +6,6 @@
 
 import * as Inspectors from './index';
 import * as Keywords from '../Keywords/index';
-import * as URL from 'url';
 
 /* *
  *
@@ -14,7 +13,6 @@ import * as URL from 'url';
  *
  * */
 
-const ID_PATTERN = /id\s*=\s*(['"])(.*?)\1/
 const LINK_PATTERN = /href\s*=\s*(['"])(.*?)\1/;
 const META_PATTERN = /<(head|noscript|script|style)[^>]*>.*?<\/\1>/;
 const TAG_PATTERN = /<[\/!]?[\w-]+[^>]*>/;
@@ -102,7 +100,7 @@ export class HTMLInspector extends Inspectors.Inspector {
 
     public getKeywordWeight (keyword: string): number {
 
-        const content = this.content.toLowerCase();
+        const content = this.content;
         const tags = Object.keys(TITLE_WEIGHT).join('|');
         const tagPattern = new RegExp(`<(${tags})[^>]*>(.*?)<\/\\1>`, 'gi');
 
@@ -131,16 +129,17 @@ export class HTMLInspector extends Inspectors.Inspector {
         }
 
         const content = HTMLInspector.getBody(this.content);
-        const idPattern = new RegExp(ID_PATTERN, 'gi');
+        const tags = Object.keys(TITLE_WEIGHT).join('|');
+        const tagPattern = new RegExp(`<(${tags})[^>]*\s+id\s*=\s*(['"])([^>]*)\\2[^>]*>(.*?)<\/\\1>`, 'gi');
         const linkAliases: Array<string> = [];
 
         let match: (RegExpExecArray|null|undefined);
-        let matchURL: (URL.URL|undefined);
+        let matchURL: (URL|undefined);
         let matchURLString: (string|undefined);
 
-        while ((match = idPattern.exec(content)) !== null) {
+        while ((match = tagPattern.exec(content)) !== null) {
             try {
-                matchURL = new URL.URL('#' + match[2], baseURL);
+                matchURL = new URL('#' + match[3], baseURL);
                 matchURLString = matchURL.toString();
 
                 if (!linkAliases.includes(matchURLString)) {
@@ -168,12 +167,12 @@ export class HTMLInspector extends Inspectors.Inspector {
         const links: Array<string> = [];
 
         let match: (RegExpExecArray|null|undefined);
-        let matchURL: (URL.URL|undefined);
+        let matchURL: (URL|undefined);
         let matchURLString: string;
 
         while ((match = linkPattern.exec(content)) !== null) {
             try {
-                matchURL = new URL.URL(match[2], baseURL);
+                matchURL = new URL(match[2], baseURL);
                 matchURLString = matchURL.toString();
 
                 if (!links.includes(matchURLString)) {

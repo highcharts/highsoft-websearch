@@ -1,3 +1,11 @@
 {
+    "editor.rulers": [
+        79,
+        80,
+        99,
+        100,
+        119,
+        120
+    ],
     "typescript.tsdk": "node_modules/typescript/lib"
 }

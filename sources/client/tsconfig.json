@@ -1,9 +1,17 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "target": "es5"
+        "module": "amd",
+        "outFile": "../../client/highsoft-search.js",
+        "rootDir": "./highsoft-search/",
+        "target": "es5",
+        "lib": [
+            "dom",
+            "es2015"
+        ],
+        "types": []
     },
     "include": [
-        "./highsoft-search.ts"
+        "./highsoft-search/**/*.ts"
     ]
 }

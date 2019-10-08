@@ -6,7 +6,6 @@
 
 import * as CLI from './index';
 import * as Keywords from '../Keywords/index';
-import * as URL from 'url';
 
 export class Application {
 
@@ -55,10 +54,10 @@ export class Application {
             return;
         }
 
-        let url: URL.URL;
+        let url: URL;
 
         try {
-            url = new URL.URL(argv[argv.length-1]);
+            url = new URL(argv[argv.length-1]);
         }
         catch (error) {
             Application.error('URL is invalid.');
@@ -103,7 +102,7 @@ export class Application {
      *
      * */
 
-    private constructor (url: URL.URL, options: CLI.Options) {
+    private constructor (url: URL, options: CLI.Options) {
         this._keywordFiles = {};
         this._links = [];
         this._options = options;
@@ -119,7 +118,7 @@ export class Application {
     private _keywordFiles: Record<string, Keywords.KeywordFile>;
     private _links: Array<string>;
     private _options: CLI.Options;
-    private _url: URL.URL;
+    private _url: URL;
 
     /* *
      *
@@ -127,10 +126,10 @@ export class Application {
      *
      * */
 
-    private download (url: URL.URL, depth: number): Promise<void> {
+    private download (url: URL, depth: number): Promise<void> {
 
-        return Keywords.KeywordDownload
-            .fromURL(url, depth, this._options.timeout)
+        return CLI.Download
+            .fromURL(url, this._options.timeout)
             .then(download => {
                 download.addKeywordFiles(this._keywordFiles, (depth > 1 ? this._links : undefined));
             });
@@ -145,13 +144,12 @@ export class Application {
         links.push(this._url.toString());
 
         let link: (string|undefined);
-        let url: (URL.URL|undefined);
+        let url: (URL|undefined);
 
         while (typeof (link = links.shift()) === 'string') {
             try {
-
-                url = new URL.URL(link);
-                downloads.push(this.download(new URL.URL(link), depth));
+                url = new URL(link);
+                downloads.push(this.download(url, depth));
             }
             catch (error) {
                 // silent fail
