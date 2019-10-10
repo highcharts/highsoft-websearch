@@ -6,7 +6,7 @@
 
 export interface KeywordItem {
     title: string;
-    url: string;
+    url: URL;
     weight: number;
 }
 

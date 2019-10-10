@@ -11,7 +11,7 @@ const COMMON_KEYWORDS = [
     'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
 ];
 
-const WORD_PATTERN = /[A-z](?:[\w\-\.]*[A-z])?/;
+const WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-])*[^\d\W])(?:\W|$)/;
 
 export class KeywordFilter {
 
@@ -28,8 +28,15 @@ export class KeywordFilter {
     public static getWords (content: string): Array<string> {
 
         const wordPattern = new RegExp(WORD_PATTERN.source, 'gi');
+        const words: Array<string> = [];
 
-        return (content.match(wordPattern) || []);
+        let wordMatch: (RegExpExecArray|null);
+
+        while ((wordMatch = wordPattern.exec(content)) !== null) {
+            words.push(wordMatch[1]);
+        }
+
+        return words;
     }
 
     /* *

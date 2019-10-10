@@ -7,8 +7,6 @@
 import * as Inspectors from './index';
 import * as Keywords from '../Keywords/index';
 
-const KEYWORD_PATTERN = /[A-z]\w*/;
-
 export class URLInspector extends Inspectors.Inspector {
 
     /* *

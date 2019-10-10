@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Highsoft Search test</title>
+        <script src="client/highsoft-search.js"></script>
+    </head>
+    <body>
+        <header>
+            <h1>Highsoft Search test</h1>
+            <div>
+                <input id="search-input" type="search" />
+                <button id="search-button">Search</button>
+                <div id="search-result"></div>
+            </div>
+        </header>
+        <script>HighsoftSearch.connect('file://test', 'search-input', 'search-result', 'search-button');</script>
+    </body>
+</html>

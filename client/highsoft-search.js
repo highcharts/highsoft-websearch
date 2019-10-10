@@ -1,22 +1,11 @@
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
+"use strict";
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-define("Client/Download", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+var HighsoftSearch;
+(function (HighsoftSearch) {
     var Download = (function () {
         function Download(url, statusCode, contentType, content) {
             this._content = content;
@@ -80,22 +69,90 @@ define("Client/Download", ["require", "exports"], function (require, exports) {
         });
         return Download;
     }());
-    exports.Download = Download;
-    exports.default = AJAX;
-});
+    HighsoftSearch.Download = Download;
+})(HighsoftSearch || (HighsoftSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-define("Client/Search", ["require", "exports", "Client/index", "index"], function (require, exports, Client, Keywords) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var WORD_PATTERN = /[A-z](?:[\w\-\.]*[A-z])?/;
-    var Search = (function () {
-        function Search(baseURL) {
-            this._baseURL = baseURL;
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
         }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var HighsoftSearch;
+(function (HighsoftSearch) {
+    var Search = (function () {
+        function Search(baseURL, inputElement, outputElement, buttonElement) {
+            this._baseURL = baseURL;
+            this._buttonElement = buttonElement;
+            this._inputElement = inputElement;
+            this._outputElement = outputElement;
+            this._resultFormatter = Search.defaultResultFormatter;
+            this.addEventListeners();
+        }
+        Search.defaultResultFormatter = function (search, item) {
+        };
+        Object.defineProperty(Search.prototype, "baseURL", {
+            get: function () {
+                return this._baseURL;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Search.prototype, "buttonElement", {
+            get: function () {
+                return this._buttonElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Search.prototype, "inputElement", {
+            get: function () {
+                return this._inputElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Search.prototype, "outputElement", {
+            get: function () {
+                return this._outputElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Search.prototype, "resultFormatter", {
+            get: function () {
+                return this._resultFormatter;
+            },
+            set: function (value) {
+                this._resultFormatter = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Search.prototype.onButtonClick = function (e) {
+            console.log(this, e);
+        };
+        Search.prototype.onInputKeyDown = function (e) {
+            console.log(this, e);
+        };
+        Search.prototype.addEventListeners = function () {
+            this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
+            this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
+        };
         Search.prototype.consolidate = function (keywordFiles) {
             var e_1, _a, e_2, _b;
             var consolidatedItems = {};
@@ -134,124 +191,71 @@ define("Client/Search", ["require", "exports", "Client/index", "index"], functio
             return Object
                 .keys(consolidatedItems)
                 .map(function (keywordItemURL) { return consolidatedItems[keywordItemURL]; })
-                .sort(Keywords.KeywordFile.sorter);
+                .sort(HighsoftSearch.KeywordURLSet.sorter);
         };
-        Search.prototype.download = function (term, baseURL) {
-            return Client.Download
-                .fromURL(new URL(term, baseURL))
-                .then(function (download) { return new Keywords.KeywordFile(term, download.content); });
+        Search.prototype.download = function (term) {
+            return HighsoftSearch.Download
+                .fromURL(new URL(term, this.baseURL))
+                .then(function (download) { return new HighsoftSearch.KeywordURLSet(term, download.content); });
         };
         Search.prototype.find = function (query) {
             var e_3, _a;
-            var baseURL = this._baseURL;
-            var loadPromises = [];
-            var wordPattern = new RegExp(WORD_PATTERN.source, 'gi');
+            var download = this.download;
+            var downloadPromises = [];
+            var terms = HighsoftSearch.KeywordFilter.getWords(query);
+            var term;
             try {
-                for (var _b = __values(query.split(wordPattern)), _c = _b.next(); !_c.done; _c = _b.next()) {
-                    var term = _c.value;
-                    loadPromises.push(this.download(term, baseURL));
+                for (var terms_1 = __values(terms), terms_1_1 = terms_1.next(); !terms_1_1.done; terms_1_1 = terms_1.next()) {
+                    term = terms_1_1.value;
+                    downloadPromises.push(download(term));
                 }
             }
             catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
-                    if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+                    if (terms_1_1 && !terms_1_1.done && (_a = terms_1.return)) _a.call(terms_1);
                 }
                 finally { if (e_3) throw e_3.error; }
             }
             return Promise
-                .all(loadPromises)
+                .all(downloadPromises)
                 .then(this.consolidate);
         };
         return Search;
     }());
-    exports.Search = Search;
-});
-define("Client/index", ["require", "exports", "Client/Download", "Client/Search"], function (require, exports, Download_1, Search_1) {
-    "use strict";
-    function __export(m) {
-        for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-    }
-    Object.defineProperty(exports, "__esModule", { value: true });
-    __export(Download_1);
-    __export(Search_1);
-});
-/*!*
- *
- *  Copyright (C) Highsoft AS
- *
- * */
-define("Keywords/KeywordFile", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var KeywordFile = (function () {
-        function KeywordFile(keyword, content) {
-            this._items = {};
-            this._keyword = keyword;
-            if (typeof content === 'string') {
-                this._items = content
-                    .split('\n')
-                    .map(function (line) { return line.split('\t', 3); })
-                    .reduce(KeywordFile.reducer, {});
-            }
+    HighsoftSearch.Search = Search;
+    function connect(url, inputElementID, outputElementID, buttonElementID) {
+        var baseURL = new URL(url);
+        var inputElement = document.getElementById(inputElementID);
+        if (!(inputElement instanceof HTMLInputElement)) {
+            throw new Error('Input element not found.');
         }
-        KeywordFile.reducer = function (items, item) {
-            items[item[0]] = {
-                title: item[2],
-                url: item[0],
-                weight: parseInt(item[1])
-            };
-            return items;
-        };
-        KeywordFile.sorter = function (itemA, itemB) {
-            return (itemA.weight - itemB.weight);
-        };
-        Object.defineProperty(KeywordFile.prototype, "items", {
-            get: function () {
-                return this._items;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(KeywordFile.prototype, "keyword", {
-            get: function () {
-                return this._keyword;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        KeywordFile.prototype.addURL = function (url, weight, title) {
-            this._items[url] = { title: title, url: url, weight: weight };
-        };
-        KeywordFile.prototype.toString = function () {
-            var items = this._items;
-            return Object
-                .keys(items)
-                .map(function (itemURL) { return items[itemURL]; })
-                .sort(KeywordFile.sorter)
-                .map(function (item) { return (item.url + '\t' + item.weight + '\t' + item.title); })
-                .join('\n');
-        };
-        return KeywordFile;
-    }());
-    exports.KeywordFile = KeywordFile;
-    exports.default = KeywordFile;
-});
+        var outputElement = document.getElementById(outputElementID);
+        if (!(outputElement instanceof HTMLElement)) {
+            throw new Error('Output element not found.');
+        }
+        var buttonElement = document.getElementById(buttonElementID);
+        if (!(buttonElement instanceof HTMLElement)) {
+            throw new Error('Button element not found.');
+        }
+        return new Search(baseURL, inputElement, outputElement, buttonElement);
+    }
+    HighsoftSearch.connect = connect;
+})(HighsoftSearch || (HighsoftSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-define("Keywords/KeywordFilter", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
+var HighsoftSearch;
+(function (HighsoftSearch) {
     var COMMON_KEYWORDS = [
         'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'com', 'could',
         'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is', 'it', 'my',
         'net', 'of', 'on', 'or', 'org', 'our', 'shall', 'should', 'that', 'the',
         'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
     ];
-    var WORD_PATTERN = /[A-z](?:[\w\-\.]*[A-z])?/;
+    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-])*[^\d\W])(?:\W|$)/;
     var KeywordFilter = (function () {
         function KeywordFilter() {
         }
@@ -260,37 +264,85 @@ define("Keywords/KeywordFilter", ["require", "exports"], function (require, expo
         };
         KeywordFilter.getWords = function (content) {
             var wordPattern = new RegExp(WORD_PATTERN.source, 'gi');
-            return (content.match(wordPattern) || []);
+            var words = [];
+            var wordMatch;
+            while ((wordMatch = wordPattern.exec(content)) !== null) {
+                words.push(wordMatch[1]);
+            }
+            return words;
         };
         return KeywordFilter;
     }());
-    exports.KeywordFilter = KeywordFilter;
-    exports.default = KeywordFilter;
-});
+    HighsoftSearch.KeywordFilter = KeywordFilter;
+})(HighsoftSearch || (HighsoftSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-define("Keywords/KeywordItem", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-});
-define("Keywords/index", ["require", "exports", "Keywords/KeywordFile", "Keywords/KeywordFilter"], function (require, exports, KeywordFile_1, KeywordFilter_1) {
-    "use strict";
-    function __export(m) {
-        for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-    }
-    Object.defineProperty(exports, "__esModule", { value: true });
-    __export(KeywordFile_1);
-    __export(KeywordFilter_1);
-});
-define("index", ["require", "exports", "Client/index", "Keywords/index"], function (require, exports, index_1, index_2) {
-    "use strict";
-    function __export(m) {
-        for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-    }
-    Object.defineProperty(exports, "__esModule", { value: true });
-    __export(index_1);
-    __export(index_2);
-});
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+var HighsoftSearch;
+(function (HighsoftSearch) {
+    var KeywordURLSet = (function () {
+        function KeywordURLSet(keyword, content) {
+            this._items = {};
+            this._keyword = keyword;
+            if (typeof content === 'string') {
+                this._items = content
+                    .split('\n')
+                    .map(function (line) { return line.split('\t', 3); })
+                    .reduce(KeywordURLSet.reducer, {});
+            }
+        }
+        KeywordURLSet.reducer = function (items, item) {
+            items[item[0]] = {
+                title: item[2],
+                url: new URL(item[0]),
+                weight: parseInt(item[1])
+            };
+            return items;
+        };
+        KeywordURLSet.sorter = function (itemA, itemB) {
+            return (itemA.weight - itemB.weight);
+        };
+        Object.defineProperty(KeywordURLSet.prototype, "items", {
+            get: function () {
+                return this._items;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(KeywordURLSet.prototype, "keyword", {
+            get: function () {
+                return this._keyword;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        KeywordURLSet.prototype.containsURL = function (url) {
+            return (typeof this._items[url] !== 'undefined');
+        };
+        KeywordURLSet.prototype.addURL = function (url, weight, title) {
+            this._items[url] = {
+                title: title,
+                url: new URL(url),
+                weight: weight
+            };
+        };
+        KeywordURLSet.prototype.toString = function () {
+            var items = this._items;
+            return Object
+                .keys(items)
+                .map(function (key) { return items[key]; })
+                .sort(KeywordURLSet.sorter)
+                .map(function (item) { return (item.url + '\t' + item.weight + '\t' + item.title); })
+                .join('\n');
+        };
+        return KeywordURLSet;
+    }());
+    HighsoftSearch.KeywordURLSet = KeywordURLSet;
+})(HighsoftSearch || (HighsoftSearch = {}));

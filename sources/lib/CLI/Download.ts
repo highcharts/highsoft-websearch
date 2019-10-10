@@ -130,7 +130,7 @@ export class Download {
      *
      * */
 
-    public addKeywordFiles (keywordFiles: Record<string, Keywords.KeywordFile>, links?: Array<string>): void {
+    public addKeywordURLSets (keywordFiles: Record<string, Keywords.KeywordURLSet>, links?: Array<string>): void {
 
         const inspectors = this.getInspectors();
         const linkAliases: Array<string> = [];
@@ -139,7 +139,7 @@ export class Download {
         let inspector: (Inspectors.Inspector|undefined);
         let inspectorLinks: (Array<string>|undefined);
         let keyword: (string|undefined);
-        let keywordFile: (Keywords.KeywordFile|undefined);
+        let keywordURLSet: (Keywords.KeywordURLSet|undefined);
         let keywords: (Array<string>|undefined);
         let linkAlias: (string|undefined);
 
@@ -160,31 +160,33 @@ export class Download {
 
             for (keyword of keywords) {
 
-                keywordFile = keywordFiles[keyword];
+                keywordURLSet = keywordFiles[keyword];
                 
-                if (typeof keywordFile === 'undefined') {
-                    keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
+                if (typeof keywordURLSet === 'undefined') {
+                    keywordFiles[keyword] = keywordURLSet = new Keywords.KeywordURLSet(keyword);
                 }
 
-                keywordFile.addURL(url, inspector.getKeywordWeight(keyword), '');
+                keywordURLSet.addURL(url, inspector.getKeywordWeight(keyword), '');
                 linkAliases.push(...inspector.getLinkAliases(url));
             }
         }
 
         for (linkAlias of linkAliases) {
 
-            inspector = new Inspectors.URLInspector(linkAlias.toString());
+            inspector = new Inspectors.URLInspector(linkAlias);
             keywords = inspector.getKeywords();
 
             for (keyword of keywords) {
 
-                keywordFile = keywordFiles[keyword];
+                keywordURLSet = keywordFiles[keyword];
 
-                if (typeof keywordFile === 'undefined') {
-                    keywordFiles[keyword] = keywordFile = new Keywords.KeywordFile(keyword);
+                if (typeof keywordURLSet === 'undefined') {
+                    keywordFiles[keyword] = keywordURLSet = new Keywords.KeywordURLSet(keyword);
                 }
 
-                keywordFile.addURL(linkAlias, inspector.getKeywordWeight(keyword), '');
+                if (!keywordURLSet.containsURL(url)) {
+                    keywordURLSet.addURL(linkAlias, inspector.getKeywordWeight(keyword), '');
+                }
             }
         }
     }

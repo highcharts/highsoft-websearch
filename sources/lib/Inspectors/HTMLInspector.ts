@@ -13,8 +13,9 @@ import * as Keywords from '../Keywords/index';
  *
  * */
 
+const ENTITY_PATTERN = /&(\w+);/;
 const LINK_PATTERN = /href\s*=\s*(['"])(.*?)\1/;
-const META_PATTERN = /<(head|noscript|script|style)[^>]*>.*?<\/\1>/;
+const META_PATTERN = /<(head|noscript|script|style)[^>]*>[\s\S]*?<\/\1>/;
 const TAG_PATTERN = /<[\/!]?[\w-]+[^>]*>/;
 const TITLE_WEIGHT: Record<string, number> = {
     title: 100,
@@ -25,7 +26,7 @@ const TITLE_WEIGHT: Record<string, number> = {
     h5: 50,
     h6: 40,
     dt: 30,
-
+    a: 10
 }
 
 /* *
@@ -52,10 +53,12 @@ export class HTMLInspector extends Inspectors.Inspector {
     public static getText (html: string): string {
 
         const tagPattern = new RegExp(TAG_PATTERN, 'gi');
+        const entityPattern = new RegExp(ENTITY_PATTERN, 'g');
 
         return HTMLInspector
             .getBody(html)
-            .replace(tagPattern, ' ');
+            .replace(tagPattern, ' ')
+            .replace(entityPattern, ' ');
     }
 
     /* *
@@ -102,7 +105,7 @@ export class HTMLInspector extends Inspectors.Inspector {
 
         const content = this.content;
         const tags = Object.keys(TITLE_WEIGHT).join('|');
-        const tagPattern = new RegExp(`<(${tags})[^>]*>(.*?)<\/\\1>`, 'gi');
+        const tagPattern = new RegExp(`<(${tags})[^>]*?>(.*?)<\/\\1>`, 'gi');
 
         let finalWeight = 0;
         let matchWeight = 0;
@@ -130,7 +133,7 @@ export class HTMLInspector extends Inspectors.Inspector {
 
         const content = HTMLInspector.getBody(this.content);
         const tags = Object.keys(TITLE_WEIGHT).join('|');
-        const tagPattern = new RegExp(`<(${tags})[^>]*\s+id\s*=\s*(['"])([^>]*)\\2[^>]*>(.*?)<\/\\1>`, 'gi');
+        const tagPattern = new RegExp(`<(${tags})[^>]*?\\s+id\\s*?=\\s*?(['"])([^>'"]*?)\\2[^>]*?>(.*?)<\/\\1>`, 'gi');
         const linkAliases: Array<string> = [];
 
         let match: (RegExpExecArray|null|undefined);

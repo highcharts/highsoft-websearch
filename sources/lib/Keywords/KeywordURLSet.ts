@@ -6,7 +6,7 @@
 
 import * as Keywords from './index';
 
-export class KeywordFile {
+export class KeywordURLSet {
 
     /* *
      *
@@ -18,7 +18,7 @@ export class KeywordFile {
 
         items[item[0]] = {
             title: item[2],
-            url: item[0],
+            url: new URL(item[0]),
             weight: parseInt(item[1])
         };
 
@@ -44,7 +44,7 @@ export class KeywordFile {
             this._items = content
                 .split('\n')
                 .map(line => line.split('\t', 3))
-                .reduce(KeywordFile.reducer, {});
+                .reduce(KeywordURLSet.reducer, {});
         }
     }
 
@@ -71,8 +71,16 @@ export class KeywordFile {
      *
      * */
 
+    public containsURL (url: string): boolean {
+        return (typeof this._items[url] !== 'undefined');
+    }
+
     public addURL (url: string, weight: number, title: string) {
-        this._items[url] = {title, url, weight};
+        this._items[url] = {
+            title,
+            url: new URL(url),
+            weight
+        };
     }
 
     public toString (): string {
@@ -81,11 +89,11 @@ export class KeywordFile {
 
         return Object
             .keys(items)
-            .map(itemURL => items[itemURL])
-            .sort(KeywordFile.sorter)
+            .map(key => items[key])
+            .sort(KeywordURLSet.sorter)
             .map(item => (item.url + '\t' + item.weight + '\t' + item.title))
             .join('\n');
     }
 }
 
-export default KeywordFile;
+export default KeywordURLSet;

@@ -5,7 +5,9 @@
  * */
 
 import * as CLI from './index';
+import * as FS from 'fs';
 import * as Keywords from '../Keywords/index';
+import * as Path from 'path';
 
 export class Application {
 
@@ -38,6 +40,17 @@ export class Application {
         }
 
         return process.exit(exitCode);
+    }
+
+    private static log (message: string): void {
+
+        const writeStream = process.stdout;
+
+        writeStream.write('[');
+        writeStream.write((new Date()).toTimeString().substr(0, 8));
+        writeStream.write('] ');
+        writeStream.write(message);
+        writeStream.write('\n');
     }
 
     public static main (): void {
@@ -103,10 +116,9 @@ export class Application {
      * */
 
     private constructor (url: URL, options: CLI.Options) {
-        this._keywordFiles = {};
-        this._links = [];
+        this._keywordURLSets = {};
+        this._links = [url.toString()];
         this._options = options;
-        this._url = url;
     }
 
     /* *
@@ -115,10 +127,9 @@ export class Application {
      *
      * */
 
-    private _keywordFiles: Record<string, Keywords.KeywordFile>;
+    private _keywordURLSets: Record<string, Keywords.KeywordURLSet>;
     private _links: Array<string>;
     private _options: CLI.Options;
-    private _url: URL;
 
     /* *
      *
@@ -128,20 +139,20 @@ export class Application {
 
     private download (url: URL, depth: number): Promise<void> {
 
+        Application.log(`Download ${url}`);
+
         return CLI.Download
             .fromURL(url, this._options.timeout)
             .then(download => {
-                download.addKeywordFiles(this._keywordFiles, (depth > 1 ? this._links : undefined));
+                download.addKeywordURLSets(this._keywordURLSets, (depth > 1 ? this._links : undefined));
             });
     }
 
-    private run (): void {
+    private downloadAll (): Promise<Array<void>> {
 
         const depth = this._options.depth;
-        const downloads: Array<Promise<void>> = [];
+        const downloadPromises: Array<Promise<void>> = [];
         const links = this._links;
-
-        links.push(this._url.toString());
 
         let link: (string|undefined);
         let url: (URL|undefined);
@@ -149,19 +160,85 @@ export class Application {
         while (typeof (link = links.shift()) === 'string') {
             try {
                 url = new URL(link);
-                downloads.push(this.download(url, depth));
+                downloadPromises.push(this.download(url, depth));
             }
             catch (error) {
                 // silent fail
             }
         }
 
-        Promise
-            .all(downloads)
-            .then(() => console.log(this._keywordFiles))
+        return Promise.all(downloadPromises);
+    }
+
+    private prepareSaveAll(directoryPath: string): Promise<void> {
+
+        Application.log(`Create ${directoryPath}`);
+
+        return new Promise((resolve, reject) => {
+            FS.mkdir(
+                directoryPath,
+                { recursive: true },
+                (error) => {
+                    if (error) {
+                        reject(error);
+                    }
+                    else {
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
+    private run (): Promise<void> {
+
+        const directoryPath = this._options.out;
+
+        return Promise
+            .resolve()
+            .then(() => this.downloadAll())
+            .then(() => this.prepareSaveAll(directoryPath))
+            .then(() => this.saveAll(directoryPath))
+            .then(() => 'Done.')
+            .then(Application.success)
             .catch(Application.error);
     }
 
+    private save (directoryPath: string, keywordURLSet: Keywords.KeywordURLSet): Promise<void> {
+
+        const filePath = Path.join(directoryPath, (keywordURLSet.keyword + '.txt'));
+
+        Application.log(`Save ${filePath}...`);
+
+        return new Promise((resolve, reject) => {
+            FS.writeFile(
+                filePath,
+                keywordURLSet.toString(),
+                (error) => {
+                    if (error) {
+                        reject(error);
+                    }
+                    else {
+                        resolve();
+                    }
+                }
+            );
+        });
+    }
+
+    private saveAll (directoryPath: string): Promise<Array<void>> {
+
+        const savePromises: Array<Promise<void>> = [];
+        const keywordURLSets = Object.values(this._keywordURLSets);
+
+        let keywordURLSet: Keywords.KeywordURLSet;
+
+        for (keywordURLSet of keywordURLSets) {
+            savePromises.push(this.save(directoryPath, keywordURLSet));
+        }
+
+        return Promise.all(savePromises);
+    }
 }
 
 export default Application;
