@@ -6,8 +6,7 @@
 
 import * as HTTP from 'http';
 import * as HTTPS from 'https';
-import * as Inspectors from '../Inspectors/index';
-import * as Keywords from '../Keywords/index';
+import * as L from '../index';
 
 export class Download {
 
@@ -18,6 +17,10 @@ export class Download {
      * */
 
     public static fromURL (url: URL, timeout: number = 60000): Promise<Download> {
+
+        if (timeout < 0) {
+            timeout = 0;
+        }
 
         return new Promise((resolve, reject) => {
 
@@ -82,7 +85,6 @@ export class Download {
     private constructor (url: URL, response: HTTP.IncomingMessage, content: Buffer) {
         this._content = content;
         this._contentType = (response.headers['content-type'] || '').split(';')[0];
-        this._links = [];
         this._response = response;
         this._statusCode = (response.statusCode || 500);
         this._url = url;
@@ -96,7 +98,6 @@ export class Download {
 
     private _content: Buffer;
     private _contentType: string;
-    private _links: Array<string>;
     private _response: HTTP.IncomingMessage;
     private _statusCode: number;
     private _url: URL;
@@ -130,28 +131,49 @@ export class Download {
      *
      * */
 
-    public addKeywordURLSets (keywordFiles: Record<string, Keywords.KeywordURLSet>, links?: Array<string>): void {
+    private getInspectors (): Array<L.Inspector> {
+
+        const inspectors: Array<L.Inspector> = [
+            new L.URLInspector(this.url.toString())
+        ];
+
+        switch (this.contentType) {
+            case 'text/html':
+                inspectors.push(new L.HTMLInspector(this.content));
+                break;
+        }
+
+        return inspectors;
+    }
+
+    public update (keywordURLSets: L.Dictionary<L.KeywordURLSet>, urlDownloads?: L.Dictionary<boolean>): void {
 
         const inspectors = this.getInspectors();
         const linkAliases: Array<string> = [];
         const url = this.url.toString();
 
-        let inspector: (Inspectors.Inspector|undefined);
+        let inspector: (L.Inspector|undefined);
+        let inspectorLink: (string|undefined);
         let inspectorLinks: (Array<string>|undefined);
         let keyword: (string|undefined);
-        let keywordURLSet: (Keywords.KeywordURLSet|undefined);
+        let keywordURLSet: (L.KeywordURLSet|undefined);
         let keywords: (Array<string>|undefined);
         let linkAlias: (string|undefined);
 
         for (inspector of inspectors) {
 
-            if (typeof links !== 'undefined') {
+            if (typeof urlDownloads !== 'undefined') {
 
-                inspectorLinks = inspector.getLinks(url)
+                inspectorLinks = inspector.getLinks(url);
 
-                for (let inspectorLink of inspectorLinks) {
-                    if (!links.includes(inspectorLink)) {
-                        links.push(inspectorLink);
+                for (inspectorLink of inspectorLinks) {
+
+                    if (inspectorLink.includes('#')) {
+                        inspectorLink = inspectorLink.substr(0, inspectorLink.indexOf('#'));
+                    }
+
+                    if (typeof urlDownloads.get(inspectorLink) === 'undefined') {
+                        urlDownloads.set(inspectorLink, false);
                     }
                 }
             }
@@ -160,28 +182,34 @@ export class Download {
 
             for (keyword of keywords) {
 
-                keywordURLSet = keywordFiles[keyword];
+                keywordURLSet = keywordURLSets.get(keyword);
                 
                 if (typeof keywordURLSet === 'undefined') {
-                    keywordFiles[keyword] = keywordURLSet = new Keywords.KeywordURLSet(keyword);
+                    keywordURLSets.set(keyword, (keywordURLSet = new L.KeywordURLSet(keyword)));
                 }
 
-                keywordURLSet.addURL(url, inspector.getKeywordWeight(keyword), '');
-                linkAliases.push(...inspector.getLinkAliases(url));
+                try {
+                    keywordURLSet.addURL(url, inspector.getKeywordWeight(keyword), inspector.getTitle());
+                    linkAliases.push(...inspector.getLinkAliases(url));
+                }
+                catch (error) {
+                    console.log(keyword);
+                    console.log(keywordURLSets.get(keyword), keywordURLSet);
+                }
             }
         }
 
         for (linkAlias of linkAliases) {
 
-            inspector = new Inspectors.URLInspector(linkAlias);
+            inspector = new L.URLInspector(linkAlias);
             keywords = inspector.getKeywords();
 
             for (keyword of keywords) {
 
-                keywordURLSet = keywordFiles[keyword];
+                keywordURLSet = keywordURLSets.get(keyword);
 
                 if (typeof keywordURLSet === 'undefined') {
-                    keywordFiles[keyword] = keywordURLSet = new Keywords.KeywordURLSet(keyword);
+                    keywordURLSets.set(keyword, (keywordURLSet = new L.KeywordURLSet(keyword)));
                 }
 
                 if (!keywordURLSet.containsURL(url)) {
@@ -189,21 +217,6 @@ export class Download {
                 }
             }
         }
-    }
-
-    private getInspectors (): Array<Inspectors.Inspector> {
-
-        const inspectors: Array<Inspectors.Inspector> = [
-            new Inspectors.URLInspector(this.url.toString())
-        ];
-
-        switch (this.contentType) {
-            case 'text/html':
-                inspectors.push(new Inspectors.HTMLInspector(this.content));
-                break;
-        }
-
-        return inspectors;
     }
 }
 

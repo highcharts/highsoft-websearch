@@ -13,7 +13,7 @@ namespace HighsoftSearch {
         'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
     ];
 
-    const WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-])*[^\d\W])(?:\W|$)/;
+    const WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-\.])*[^\d\W])(?:\W|$)/;
 
     export class KeywordFilter {
 

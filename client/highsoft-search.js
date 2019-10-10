@@ -255,7 +255,7 @@ var HighsoftSearch;
         'net', 'of', 'on', 'or', 'org', 'our', 'shall', 'should', 'that', 'the',
         'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
     ];
-    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-])*[^\d\W])(?:\W|$)/;
+    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-\.])*[^\d\W])(?:\W|$)/;
     var KeywordFilter = (function () {
         function KeywordFilter() {
         }
@@ -323,15 +323,15 @@ var HighsoftSearch;
             enumerable: true,
             configurable: true
         });
-        KeywordURLSet.prototype.containsURL = function (url) {
-            return (typeof this._items[url] !== 'undefined');
-        };
         KeywordURLSet.prototype.addURL = function (url, weight, title) {
             this._items[url] = {
                 title: title,
                 url: new URL(url),
                 weight: weight
             };
+        };
+        KeywordURLSet.prototype.containsURL = function (url) {
+            return (typeof this._items[url] !== 'undefined');
         };
         KeywordURLSet.prototype.toString = function () {
             var items = this._items;

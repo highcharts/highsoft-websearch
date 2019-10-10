@@ -29,7 +29,7 @@ export class URLInspector extends Inspectors.Inspector {
             return this._keywords;
         }
 
-        const words = Keywords.KeywordFilter.getWords(this.content);
+        const words = Keywords.KeywordFilter.getWords(this.content.toLowerCase());
 
         let keywords: Array<string> = [];
         let word: string;
@@ -80,6 +80,10 @@ export class URLInspector extends Inspectors.Inspector {
 
     public getLinks (): Array<string> {
         return [];
+    }
+
+    public getTitle (): string {
+        return '';
     }
 }
 

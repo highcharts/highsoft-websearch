@@ -15,7 +15,7 @@
     },
     "devDependencies": {
         "@types/node": "^12.7.11",
-        "typescript": "^3.6.3"
+        "typescript": "^3.6.4"
     },
     "engines": {
         "node": ">=10"
@@ -39,6 +39,6 @@
     "scripts": {
         "build": "npm run clean && tsc --build sources/client sources/lib",
         "clean": "rm -rf client lib test_results",
-        "test": "npm run build && ./bin/highsoft-search --depth 2 --out test_results https://api.highcharts.com/class-reference && open test.html"
+        "test": "npm run build && ./bin/highsoft-search --depth 2 --out test_results https://api.highcharts.com/class-reference/ && open test.html"
     }
 }

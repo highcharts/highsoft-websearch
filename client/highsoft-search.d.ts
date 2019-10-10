@@ -93,8 +93,8 @@ declare namespace HighsoftSearch {
         private _keyword;
         readonly items: Record<string, KeywordItem>;
         readonly keyword: string;
-        containsURL(url: string): boolean;
         addURL(url: string, weight: number, title: string): void;
+        containsURL(url: string): boolean;
         toString(): string;
     }
 }

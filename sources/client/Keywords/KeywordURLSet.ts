@@ -70,16 +70,16 @@ namespace HighsoftSearch {
         *
         * */
 
-        public containsURL (url: string): boolean {
-            return (typeof this._items[url] !== 'undefined');
-        }
-
         public addURL (url: string, weight: number, title: string) {
             this._items[url] = {
                 title,
                 url: new URL(url),
                 weight
             };
+        }
+
+        public containsURL (url: string): boolean {
+            return (typeof this._items[url] !== 'undefined');
         }
 
         public toString (): string {

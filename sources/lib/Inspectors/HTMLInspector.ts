@@ -17,6 +17,7 @@ const ENTITY_PATTERN = /&(\w+);/;
 const LINK_PATTERN = /href\s*=\s*(['"])(.*?)\1/;
 const META_PATTERN = /<(head|noscript|script|style)[^>]*>[\s\S]*?<\/\1>/;
 const TAG_PATTERN = /<[\/!]?[\w-]+[^>]*>/;
+const TITLE_PATTERN = /<title[^>]*>([\s\S]+?)<\/title>/;
 const TITLE_WEIGHT: Record<string, number> = {
     title: 100,
     h1: 90,
@@ -47,7 +48,7 @@ export class HTMLInspector extends Inspectors.Inspector {
 
         const metaPattern = new RegExp(META_PATTERN, 'gi');
 
-        return html.replace(metaPattern, ' ');
+        return html.replace(metaPattern, ' ').trim();
     }
 
     public static getText (html: string): string {
@@ -58,7 +59,20 @@ export class HTMLInspector extends Inspectors.Inspector {
         return HTMLInspector
             .getBody(html)
             .replace(tagPattern, ' ')
-            .replace(entityPattern, ' ');
+            .replace(entityPattern, ' ')
+            .trim();
+    }
+
+    public static getTitle (html: string): string {
+
+        const titlePattern = new RegExp(TITLE_PATTERN, 'gi');
+        const titleMatch = titlePattern.exec(html);
+
+        if (titleMatch === null) {
+            return '';
+        }
+
+        return (titleMatch[1] || '').replace(/\s+/g, ' ').trim();
     }
 
     /* *
@@ -190,6 +204,10 @@ export class HTMLInspector extends Inspectors.Inspector {
         this._links = links;
 
         return links;
+    }
+
+    public getTitle (): string {
+        return HTMLInspector.getTitle(this.content);
     }
 }
 

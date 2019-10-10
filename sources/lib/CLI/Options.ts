@@ -27,8 +27,8 @@ export class Options {
     }
 
     public static getOptionsFromArguments (argv: Array<string>, options: Options = new Options()): (Options|null) {
-
         try {
+
             let arg: string;
 
             for (let i = 0, ie = argv.length; i < ie; ++i) {
@@ -38,6 +38,10 @@ export class Options {
                 switch (arg) {
                     case '--allowForeignDomains':
                         options._allowForeignDomains = true;
+                        continue;
+                    case '--delay':
+                        arg = argv[++i];
+                        options._delay = parseInt(arg);
                         continue;
                     case '--depth':
                         arg = argv[++i];
@@ -62,8 +66,8 @@ export class Options {
     }
 
     public static getOptionsFromFile (filePath: string, options: Options = new Options()): (Options|null|undefined) {
-
         try {
+
             const file = FS.readFileSync(filePath);
 
             try {
@@ -78,8 +82,20 @@ export class Options {
                         options._allowForeignDomains = discoveryOptions.allowForeignDomains;
                     }
 
+                    if (typeof discoveryOptions.delay === 'number') {
+                        options._delay = discoveryOptions.delay;
+                    }
+
                     if (typeof discoveryOptions.depth === 'number') {
                         options._depth = discoveryOptions.depth;
+                    }
+
+                    if (typeof discoveryOptions.out === 'string') {
+                        options._out = discoveryOptions.out;
+                    }
+
+                    if (typeof discoveryOptions.timeout === 'number') {
+                        options._timeout = discoveryOptions.timeout;
                     }
                 }
 
@@ -92,7 +108,6 @@ export class Options {
         catch (error) {
             return undefined;
         }
-
     }
 
     /* *
@@ -103,6 +118,7 @@ export class Options {
 
     private constructor () {
         this._allowForeignDomains = false;
+        this._delay = 1000;
         this._depth = 1;
         this._out = process.cwd();
         this._timeout = 60000;
@@ -115,12 +131,17 @@ export class Options {
      * */
 
     private _allowForeignDomains: boolean;
+    private _delay: number;
     private _depth: number;
     private _out: string;
     private _timeout: number;
 
     public get allowForeignDomains (): boolean {
         return this._allowForeignDomains;
+    }
+
+    public get delay (): number {
+        return this._delay;
     }
 
     public get depth (): number {
@@ -145,6 +166,7 @@ export class Options {
 export interface OptionsJSON {
     discoveryOptions?: {
         allowForeignDomains?: boolean;
+        delay?: number;
         depth?: number;
         out?: string;
         timeout?: number;

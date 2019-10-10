@@ -42,6 +42,7 @@ export abstract class Inspector {
 
     public abstract getLinks (baseURL?: string): Array<string>;
 
+    public abstract getTitle (): string;
 }
 
 export default Inspector;
