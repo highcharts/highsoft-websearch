@@ -31,6 +31,7 @@ export class Download extends Load {
                 response.on('data', (data) => {
                     dataBuffer.push(data);
                 });
+
                 response.on('end', () => {
 
                     const statusCode = (response.statusCode || 200);
@@ -52,6 +53,7 @@ export class Download extends Load {
                             return;
                         }
                         catch (error) {
+                            console.log(error);
                             // silent fail
                         }
                     }
@@ -64,7 +66,7 @@ export class Download extends Load {
 
             const options = {
                 method: 'GET',
-                timeout: timeout
+                //timeout: timeout
             };
 
             if (url.protocol === 'https:') {

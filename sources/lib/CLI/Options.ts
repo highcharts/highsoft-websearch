@@ -141,7 +141,7 @@ export class Options {
     private _allowForeignDomains: boolean;
     private _delay: number;
     private _depth: number;
-    private _sideload?: string;
+    private _sideload: (string|undefined);
     private _out: string;
     private _timeout: number;
 

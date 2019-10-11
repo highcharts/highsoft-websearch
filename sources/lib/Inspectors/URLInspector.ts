@@ -82,8 +82,8 @@ export class URLInspector extends Inspectors.Inspector {
         return [];
     }
 
-    public getTitle (): string {
-        return '';
+    public getTitle (): undefined {
+        return;
     }
 }
 

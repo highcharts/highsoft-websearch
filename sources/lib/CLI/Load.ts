@@ -17,6 +17,7 @@ export abstract class Load {
     protected constructor (url: URL, contentType: string, content: string) {
         this._content = content;
         this._contentType = contentType;
+        this._title = 'Untitled';
         this._url = url;
     }
 
@@ -28,6 +29,7 @@ export abstract class Load {
 
     private _content: string;
     private _contentType: string;
+    private _title: string;
     private _url: URL;
 
     public get content (): string {
@@ -39,6 +41,10 @@ export abstract class Load {
     }
 
     public abstract get hasFailed (): boolean;
+
+    public get title (): string {
+        return this._title;
+    }
 
     public get url (): URL {
         return this._url;
@@ -72,6 +78,21 @@ export abstract class Load {
         const url = this.url.toString();
 
         let inspector: (L.Inspector|undefined);
+        let title: (string|undefined);
+
+        for (inspector of inspectors) {
+            if (typeof title === 'undefined') {
+                title = inspector.getTitle();
+            }
+        }
+
+        if (typeof title === 'undefined') {
+            title = this.title;
+        }
+        else {
+            this._title = title;
+        }
+
         let inspectorLink: (string|undefined);
         let inspectorLinks: (Array<string>|undefined);
         let keyword: (string|undefined);
@@ -108,7 +129,7 @@ export abstract class Load {
                 }
 
                 try {
-                    keywordURLSet.addURL(url, inspector.getKeywordWeight(keyword), inspector.getTitle());
+                    keywordURLSet.addURL(url, inspector.getKeywordWeight(keyword), title);
                     linkAliases.push(...inspector.getLinkAliases(url));
                 }
                 catch (error) {

@@ -63,13 +63,13 @@ export class HTMLInspector extends Inspectors.Inspector {
             .trim();
     }
 
-    public static getTitle (html: string): string {
+    public static getTitle (html: string): (string|undefined) {
 
         const titlePattern = new RegExp(TITLE_PATTERN, 'gi');
         const titleMatch = titlePattern.exec(html);
 
         if (titleMatch === null) {
-            return '';
+            return;
         }
 
         return (titleMatch[1] || '').replace(/\s+/g, ' ').trim();
@@ -84,6 +84,7 @@ export class HTMLInspector extends Inspectors.Inspector {
     private _keywords: (Array<string>|undefined);
     private _linkAliases: (Array<string>|undefined);
     private _links: (Array<string>|undefined);
+    private _title: (string|undefined);
 
     /* *
      *
@@ -206,8 +207,15 @@ export class HTMLInspector extends Inspectors.Inspector {
         return links;
     }
 
-    public getTitle (): string {
-        return HTMLInspector.getTitle(this.content);
+    public getTitle (): (string|undefined) {
+
+        let title = this._title;
+
+        if (typeof title === 'undefined') {
+            this._title = title = HTMLInspector.getTitle(this.content);
+        }
+
+        return title;
     }
 }
 

@@ -123,7 +123,6 @@ export class Application {
 
     private constructor (url: URL, options: CLI.Options) {
         this._baseURL = url;
-        this._domain = url.protocol + '//' + url.hostname + '/';
         this._keywordURLSets = new L.Dictionary();
         this._options = options;
         this._loadTasks = new L.Dictionary();
@@ -136,7 +135,6 @@ export class Application {
      * */
 
     private _baseURL: URL;
-    private _domain: string;
     private _keywordURLSets: L.Dictionary<L.KeywordURLSet>;
     private _loadTasks: L.Dictionary<boolean>;
     private _options: CLI.Options;
@@ -173,8 +171,9 @@ export class Application {
             return Promise.resolve();
         }
 
+        const baseURL = this._baseURL;
+        const baseURLString = baseURL.toString();
         const delay = this._options.delay;
-        const domain = this._domain;
         const downloadPromises: Array<Promise<void>> = [];
         const includeForeignDomains = this._options.allowForeignDomains;
         const timeout = this._options.timeout;
@@ -186,7 +185,7 @@ export class Application {
 
             if (
                 !includeForeignDomains &&
-                !loadURL.startsWith(domain)
+                !loadURL.startsWith(baseURLString)
             ) {
                 continue;
             }
@@ -201,7 +200,7 @@ export class Application {
                         .delay(++delayFactor * delay)
                         .then(() => {
                             loadTasks.set(loadURL, true);
-                            this.downloadURL(new URL(loadURL), timeout, depth)
+                            return this.downloadURL(new URL(loadURL), timeout, depth);
                         })
                 );
             }
@@ -226,7 +225,7 @@ export class Application {
             .then((download: CLI.Download): void => {
 
                 if (download.hasFailed) {
-                    Application.log('\tFailed.');
+                    Application.log(`FAILED: ${url}`);
                     return;
                 }
 
@@ -245,7 +244,7 @@ export class Application {
             return this.sideloadAll(this._options.sideload, depth);
         }
 
-        return this.downloadAll(depth)
+        return this.downloadAll(depth);
     }
 
     private run (): Promise<void> {
@@ -280,7 +279,7 @@ export class Application {
 
         const filePath = Path.join(directoryPath, (keywordURLSet.keyword + '.txt'));
 
-        // Application.log(`Save ${filePath}...`);
+        Application.log(`Save ${filePath}...`);
 
         return new Promise((resolve, reject) => {
             FS.writeFile(
@@ -347,7 +346,7 @@ export class Application {
             .then((sideload: CLI.Sideload): void => {
 
                 if (sideload.hasFailed) {
-                    Application.log('\tFailed.');
+                    Application.log(`FAILED: ${path}`);
                     console.log(sideload);
                     return;
                 }

@@ -42,7 +42,7 @@ export abstract class Inspector {
 
     public abstract getLinks (baseURL?: string): Array<string>;
 
-    public abstract getTitle (): string;
+    public abstract getTitle (): (string|undefined);
 }
 
 export default Inspector;
