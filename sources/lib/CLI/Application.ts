@@ -122,11 +122,11 @@ export class Application {
      * */
 
     private constructor (url: URL, options: CLI.Options) {
+        this._baseURL = url;
         this._domain = url.protocol + '//' + url.hostname + '/';
         this._keywordURLSets = new L.Dictionary();
         this._options = options;
-        this._urlDownloads = new L.Dictionary();
-        this._urlDownloads.set(url.toString(), false);
+        this._loadTasks = new L.Dictionary();
     }
 
     /* *
@@ -135,10 +135,11 @@ export class Application {
      *
      * */
 
+    private _baseURL: URL;
     private _domain: string;
     private _keywordURLSets: L.Dictionary<L.KeywordURLSet>;
+    private _loadTasks: L.Dictionary<boolean>;
     private _options: CLI.Options;
-    private _urlDownloads: L.Dictionary<boolean>;
 
     /* *
      *
@@ -175,22 +176,22 @@ export class Application {
         const delay = this._options.delay;
         const domain = this._domain;
         const downloadPromises: Array<Promise<void>> = [];
-        const urlDownloads = this._urlDownloads;
         const includeForeignDomains = this._options.allowForeignDomains;
         const timeout = this._options.timeout;
+        const loadTasks = this._loadTasks;
 
         let delayFactor = 0;
 
-        for (let url of urlDownloads.keys) {
+        for (let loadURL of loadTasks.keys) {
 
             if (
                 !includeForeignDomains &&
-                !url.startsWith(domain)
+                !loadURL.startsWith(domain)
             ) {
                 continue;
             }
 
-            if (urlDownloads.get(url) === true) {
+            if (loadTasks.get(loadURL) === true) {
                 continue;
             }
         
@@ -198,7 +199,10 @@ export class Application {
                 downloadPromises.push(
                     Application
                         .delay(++delayFactor * delay)
-                        .then(() => this.downloadURL(new URL(url), timeout, depth))
+                        .then(() => {
+                            loadTasks.set(loadURL, true);
+                            this.downloadURL(new URL(loadURL), timeout, depth)
+                        })
                 );
             }
             catch (error) {
@@ -215,26 +219,39 @@ export class Application {
 
     private downloadURL (url: URL, timeout: number, depth: number): Promise<void> {
 
-        const urlDownloads = this._urlDownloads;
-
         Application.log(`Download ${url}`);
-
-        urlDownloads.set(url.toString(), true);
 
         return CLI.Download
             .fromURL(url, timeout)
             .then((download: CLI.Download): void => {
+
+                if (download.hasFailed) {
+                    Application.log('\tFailed.');
+                    return;
+                }
+
                 download.update(
                     this._keywordURLSets,
-                    (depth > 1 ? urlDownloads : undefined)
+                    (depth > 1 ? this._loadTasks : undefined)
                 );
             });
+    }
+
+    private loadAll (depth: number): Promise<void> {
+
+        this._loadTasks.set(this._baseURL.toString(), false);
+
+        if (typeof this._options.sideload === 'string') {
+            return this.sideloadAll(this._options.sideload, depth);
+        }
+
+        return this.downloadAll(depth)
     }
 
     private run (): Promise<void> {
         return Promise
             .resolve()
-            .then(() => this.downloadAll(this._options.depth))
+            .then(() => this.loadAll(this._options.depth))
             .then(() => this.saveAll(this._options.out))
             .then(() => 'Done.')
             .then(Application.success)
@@ -263,7 +280,7 @@ export class Application {
 
         const filePath = Path.join(directoryPath, (keywordURLSet.keyword + '.txt'));
 
-        Application.log(`Save ${filePath}...`);
+        // Application.log(`Save ${filePath}...`);
 
         return new Promise((resolve, reject) => {
             FS.writeFile(
@@ -279,6 +296,67 @@ export class Application {
                 }
             );
         });
+    }
+
+    private sideloadAll (basePath: string, depth: number): Promise<void> {
+
+        if (depth === 0) {
+            return Promise.resolve();
+        }
+
+        const baseURL = this._baseURL;
+        const baseURLString = baseURL.toString();
+        const sideloadPromises: Array<Promise<void>> = [];
+        const loadTasks = this._loadTasks;
+
+        let loadPath: (string|undefined);
+        let loadURL: (string|undefined);
+
+        for (loadURL of loadTasks.keys) {
+
+            if (
+                !loadURL.startsWith(baseURLString) ||
+                loadTasks.get(loadURL) === true
+            ) {
+                continue;
+            }
+        
+            try {
+                loadPath = Path.join(basePath, loadURL.substr(baseURLString.length));
+                loadTasks.set(loadURL, true);
+                sideloadPromises.push(this.sideloadPath(baseURL, loadPath, depth));
+            }
+            catch (error) {
+                // silent fail
+            }
+        }
+
+        return Promise
+            .all(sideloadPromises)
+            .then(() => {
+                return this.sideloadAll(basePath, --depth);
+            });
+    }
+
+    private sideloadPath(baseURL: URL, path: string, depth: number): Promise<void> {
+
+        Application.log(`Sideload ${path}`);
+
+        return CLI.Sideload
+            .fromPath(baseURL, path)
+            .then((sideload: CLI.Sideload): void => {
+
+                if (sideload.hasFailed) {
+                    Application.log('\tFailed.');
+                    console.log(sideload);
+                    return;
+                }
+
+                sideload.update(
+                    this._keywordURLSets,
+                    (depth > 1 ? this._loadTasks : undefined)
+                );
+            });
     }
 }
 

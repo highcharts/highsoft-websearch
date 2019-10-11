@@ -51,6 +51,10 @@ export class Options {
                         arg = argv[++i]
                         options._out = arg;
                         continue;
+                    case '--sideload':
+                        arg = argv[++i];
+                        options._sideload = arg;
+                        continue;
                     case '--timeout':
                         arg = argv[++i];
                         options._timeout = parseInt(arg);
@@ -94,6 +98,10 @@ export class Options {
                         options._out = discoveryOptions.out;
                     }
 
+                    if (typeof discoveryOptions.sideload === 'string') {
+                        options._sideload = discoveryOptions.sideload;
+                    }
+
                     if (typeof discoveryOptions.timeout === 'number') {
                         options._timeout = discoveryOptions.timeout;
                     }
@@ -133,6 +141,7 @@ export class Options {
     private _allowForeignDomains: boolean;
     private _delay: number;
     private _depth: number;
+    private _sideload?: string;
     private _out: string;
     private _timeout: number;
 
@@ -152,6 +161,10 @@ export class Options {
         return this._out;
     }
 
+    public get sideload (): (string|undefined) {
+        return this._sideload;
+    }
+
     public get timeout (): number {
         return this._timeout;
     }
@@ -169,6 +182,7 @@ export interface OptionsJSON {
         delay?: number;
         depth?: number;
         out?: string;
+        sideload?: string;
         timeout?: number;
     }
 }
