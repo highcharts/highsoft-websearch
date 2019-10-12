@@ -13,7 +13,7 @@ namespace HighsoftSearch {
         *
         * */
 
-        public static fromURL (url: URL, timeout: number = 60000): Promise<Download> {
+        public static fromURL (url: string, timeout: number = 60000): Promise<Download> {
             return new Promise((resolve, reject) => {
 
                 const request = new XMLHttpRequest();

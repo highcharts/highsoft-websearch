@@ -95,19 +95,124 @@ var __values = (this && this.__values) || function(o) {
 var HighsoftSearch;
 (function (HighsoftSearch) {
     var Search = (function () {
-        function Search(baseURL, inputElement, outputElement, buttonElement) {
-            this._baseURL = baseURL;
+        function Search(basePath, inputElement, outputElement, buttonElement) {
+            this._basePath = basePath;
             this._buttonElement = buttonElement;
             this._inputElement = inputElement;
             this._outputElement = outputElement;
             this._resultFormatter = Search.defaultResultFormatter;
+            this._timeout = 0;
             this.addEventListeners();
         }
         Search.defaultResultFormatter = function (search, item) {
+            var outputElement = search.outputElement;
+            if (typeof item === 'undefined') {
+                outputElement.style.display = 'none';
+                return;
+            }
+            var linkElement = document.createElement('a');
+            var headElement;
+            var previewElement;
+            var resultElement;
+            switch (outputElement.tagName.toLowerCase()) {
+                default:
+                    headElement = document.createElement('h3');
+                    previewElement = document.createElement('p');
+                    resultElement = document.createElement('div');
+                    resultElement.appendChild(headElement);
+                    resultElement.appendChild(previewElement);
+                    outputElement.appendChild(resultElement);
+                    break;
+                case 'dl':
+                    headElement = document.createElement('dt');
+                    previewElement = document.createElement('dd');
+                    resultElement = headElement;
+                    outputElement.appendChild(headElement);
+                    outputElement.appendChild(previewElement);
+                    break;
+                case 'ol':
+                case 'ul':
+                    headElement = document.createElement('h3');
+                    previewElement = document.createElement('p');
+                    resultElement = document.createElement('li');
+                    resultElement.appendChild(headElement);
+                    resultElement.appendChild(previewElement);
+                    outputElement.appendChild(resultElement);
+                    break;
+                case 'table':
+                    headElement = document.createElement('th');
+                    previewElement = document.createElement('td');
+                    resultElement = document.createElement('tr');
+                    resultElement.appendChild(headElement);
+                    resultElement.appendChild(previewElement);
+                    outputElement.appendChild(resultElement);
+                    break;
+            }
+            linkElement.setAttribute('href', item.url);
+            linkElement.setAttribute('title', "Relevance: " + item.weight + "%");
+            linkElement.innerText = item.title;
+            headElement.appendChild(linkElement);
+            resultElement.setAttribute('class', 'SearchResult');
+            outputElement.style.display = '';
+            Search
+                .preview(search, item)
+                .then(function (html) {
+                previewElement.innerHTML = html;
+            })
+                .catch(function () { return undefined; });
         };
-        Object.defineProperty(Search.prototype, "baseURL", {
+        Search.preview = function (search, item) {
+            var searchTerms = search.terms;
+            if (typeof searchTerms === 'undefined') {
+                Promise.resolve('');
+            }
+            return HighsoftSearch.Download
+                .fromURL(item.url)
+                .then(function (download) {
+                var e_1, _a;
+                var downloadDocument = document.createElement('html');
+                downloadDocument.innerHTML = download.content;
+                var downloadBody = downloadDocument.getElementsByTagName('body')[0];
+                if (typeof downloadBody === 'undefined' ||
+                    typeof searchTerms === 'undefined') {
+                    return '';
+                }
+                var preview = HighsoftSearch.KeywordFilter.getWords(downloadBody.innerText);
+                var previewIndex = -1;
+                var previewStart = 0;
+                var previewEnd = 0;
+                try {
+                    for (var searchTerms_1 = __values(searchTerms), searchTerms_1_1 = searchTerms_1.next(); !searchTerms_1_1.done; searchTerms_1_1 = searchTerms_1.next()) {
+                        var searchTerm = searchTerms_1_1.value;
+                        previewIndex = preview.indexOf(searchTerm);
+                        if (previewIndex >= 0) {
+                            break;
+                        }
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (searchTerms_1_1 && !searchTerms_1_1.done && (_a = searchTerms_1.return)) _a.call(searchTerms_1);
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
+                if (previewIndex < 10) {
+                    previewEnd = 20;
+                }
+                else {
+                    previewEnd = previewIndex + 10;
+                    previewStart = previewIndex - 10;
+                }
+                return (preview.slice(previewStart, previewIndex).join(' ') +
+                    '<b>' + preview[previewIndex] + '</b>' +
+                    preview.slice((previewIndex + 1), previewEnd).join(' '));
+            })
+                .catch(function () { return ''; });
+        };
+        Object.defineProperty(Search.prototype, "basePath", {
             get: function () {
-                return this._baseURL;
+                return this._basePath;
             },
             enumerable: true,
             configurable: true
@@ -133,6 +238,13 @@ var HighsoftSearch;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Search.prototype, "query", {
+            get: function () {
+                return this._query;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Search.prototype, "resultFormatter", {
             get: function () {
                 return this._resultFormatter;
@@ -143,18 +255,58 @@ var HighsoftSearch;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Search.prototype, "terms", {
+            get: function () {
+                return this._terms;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Search.prototype.onButtonClick = function (e) {
-            console.log(this, e);
+            clearTimeout(this._timeout);
+            if (e.target !== this._buttonElement) {
+                return;
+            }
+            this.onTimeout();
         };
         Search.prototype.onInputKeyDown = function (e) {
-            console.log(this, e);
+            clearTimeout(this._timeout);
+            var inputElement = this._inputElement;
+            if (e.target !== inputElement) {
+                return;
+            }
+            if (e.key === 'Enter') {
+                this.onButtonClick(e);
+                return;
+            }
+            this._timeout = setTimeout(this.onTimeout.bind(this), 500);
+        };
+        Search.prototype.onTimeout = function () {
+            var _this = this;
+            var query = this._inputElement.value;
+            var words = HighsoftSearch.KeywordFilter.getWords(query);
+            if (words.length === 0 || words[0].length < 2) {
+                this.hideResults();
+                return;
+            }
+            this
+                .find(query)
+                .then(function (items) {
+                if (items.length === 0) {
+                    _this.hideResults();
+                }
+                else {
+                    _this.showResults(items);
+                }
+            })
+                .catch(function () { return _this.hideResults; });
         };
         Search.prototype.addEventListeners = function () {
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
         };
         Search.prototype.consolidate = function (keywordFiles) {
-            var e_1, _a, e_2, _b;
+            var e_2, _a, e_3, _b;
             var consolidatedItems = {};
             var keywordFile;
             var keywordItems;
@@ -166,27 +318,27 @@ var HighsoftSearch;
                     keywordItems = keywordFile.items;
                     keywordItemURLs = Object.keys(keywordItems);
                     try {
-                        for (var keywordItemURLs_1 = (e_2 = void 0, __values(keywordItemURLs)), keywordItemURLs_1_1 = keywordItemURLs_1.next(); !keywordItemURLs_1_1.done; keywordItemURLs_1_1 = keywordItemURLs_1.next()) {
+                        for (var keywordItemURLs_1 = (e_3 = void 0, __values(keywordItemURLs)), keywordItemURLs_1_1 = keywordItemURLs_1.next(); !keywordItemURLs_1_1.done; keywordItemURLs_1_1 = keywordItemURLs_1.next()) {
                             keywordItemURL = keywordItemURLs_1_1.value;
                             consolidatedItems[keywordItemURL] = (consolidatedItems[keywordItemURL] ||
                                 keywordItems[keywordItemURL]);
                         }
                     }
-                    catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
                     finally {
                         try {
                             if (keywordItemURLs_1_1 && !keywordItemURLs_1_1.done && (_b = keywordItemURLs_1.return)) _b.call(keywordItemURLs_1);
                         }
-                        finally { if (e_2) throw e_2.error; }
+                        finally { if (e_3) throw e_3.error; }
                     }
                 }
             }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
                     if (keywordFiles_1_1 && !keywordFiles_1_1.done && (_a = keywordFiles_1.return)) _a.call(keywordFiles_1);
                 }
-                finally { if (e_1) throw e_1.error; }
+                finally { if (e_2) throw e_2.error; }
             }
             return Object
                 .keys(consolidatedItems)
@@ -195,37 +347,58 @@ var HighsoftSearch;
         };
         Search.prototype.download = function (term) {
             return HighsoftSearch.Download
-                .fromURL(new URL(term, this.baseURL))
-                .then(function (download) { return new HighsoftSearch.KeywordURLSet(term, download.content); });
+                .fromURL(this.basePath + term + '.txt')
+                .then(function (download) { return new HighsoftSearch.KeywordURLSet(term, download.content); })
+                .catch(function () { return new HighsoftSearch.KeywordURLSet(term); });
         };
         Search.prototype.find = function (query) {
-            var e_3, _a;
-            var download = this.download;
+            var e_4, _a;
+            this._query = query;
             var downloadPromises = [];
-            var terms = HighsoftSearch.KeywordFilter.getWords(query);
+            var terms = this._terms = HighsoftSearch.KeywordFilter.getWords(query);
             var term;
             try {
                 for (var terms_1 = __values(terms), terms_1_1 = terms_1.next(); !terms_1_1.done; terms_1_1 = terms_1.next()) {
                     term = terms_1_1.value;
-                    downloadPromises.push(download(term));
+                    downloadPromises.push(this.download(term));
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (terms_1_1 && !terms_1_1.done && (_a = terms_1.return)) _a.call(terms_1);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             return Promise
                 .all(downloadPromises)
-                .then(this.consolidate);
+                .then(this.consolidate)
+                .catch(function () { return []; });
+        };
+        Search.prototype.hideResults = function () {
+            this._resultFormatter.call(this, this);
+        };
+        Search.prototype.showResults = function (items) {
+            var e_5, _a;
+            this._outputElement.innerHTML = '';
+            try {
+                for (var items_1 = __values(items), items_1_1 = items_1.next(); !items_1_1.done; items_1_1 = items_1.next()) {
+                    var item = items_1_1.value;
+                    this._resultFormatter.call(this, this, item);
+                }
+            }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            finally {
+                try {
+                    if (items_1_1 && !items_1_1.done && (_a = items_1.return)) _a.call(items_1);
+                }
+                finally { if (e_5) throw e_5.error; }
+            }
         };
         return Search;
     }());
     HighsoftSearch.Search = Search;
-    function connect(url, inputElementID, outputElementID, buttonElementID) {
-        var baseURL = new URL(url);
+    function connect(basePath, inputElementID, outputElementID, buttonElementID) {
         var inputElement = document.getElementById(inputElementID);
         if (!(inputElement instanceof HTMLInputElement)) {
             throw new Error('Input element not found.');
@@ -238,7 +411,7 @@ var HighsoftSearch;
         if (!(buttonElement instanceof HTMLElement)) {
             throw new Error('Button element not found.');
         }
-        return new Search(baseURL, inputElement, outputElement, buttonElement);
+        return new Search(basePath, inputElement, outputElement, buttonElement);
     }
     HighsoftSearch.connect = connect;
 })(HighsoftSearch || (HighsoftSearch = {}));
@@ -299,10 +472,10 @@ var HighsoftSearch;
             }
         }
         KeywordURLSet.reducer = function (items, item) {
-            items[item[0]] = {
+            items[item[1]] = {
                 title: item[2],
-                url: new URL(item[0]),
-                weight: parseInt(item[1])
+                url: item[1],
+                weight: parseInt(item[0])
             };
             return items;
         };
@@ -326,7 +499,7 @@ var HighsoftSearch;
         KeywordURLSet.prototype.addURL = function (url, weight, title) {
             this._items[url] = {
                 title: title,
-                url: new URL(url),
+                url: url,
                 weight: weight
             };
         };
@@ -339,7 +512,7 @@ var HighsoftSearch;
                 .keys(items)
                 .map(function (key) { return items[key]; })
                 .sort(KeywordURLSet.sorter)
-                .map(function (item) { return (item.url + '\t' + item.weight + '\t' + item.title); })
+                .map(function (item) { return (item.weight + '\t' + item.url + '\t' + item.title); })
                 .join('\n');
         };
         return KeywordURLSet;

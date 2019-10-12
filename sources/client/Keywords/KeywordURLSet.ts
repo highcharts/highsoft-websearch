@@ -15,10 +15,10 @@ namespace HighsoftSearch {
 
         private static reducer (items: Record<string, KeywordItem>, item: Array<string>): Record<string, KeywordItem> {
 
-            items[item[0]] = {
+            items[item[1]] = {
                 title: item[2],
-                url: new URL(item[0]),
-                weight: parseInt(item[1])
+                url: item[1],
+                weight: parseInt(item[0])
             };
 
             return items;
@@ -73,7 +73,7 @@ namespace HighsoftSearch {
         public addURL (url: string, weight: number, title: string) {
             this._items[url] = {
                 title,
-                url: new URL(url),
+                url,
                 weight
             };
         }
@@ -90,7 +90,7 @@ namespace HighsoftSearch {
                 .keys(items)
                 .map(key => items[key])
                 .sort(KeywordURLSet.sorter)
-                .map(item => (item.url + '\t' + item.weight + '\t' + item.title))
+                .map(item => (item.weight + '\t' + item.url + '\t' + item.title))
                 .join('\n');
         }
     }

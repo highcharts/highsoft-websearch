@@ -6,6 +6,6 @@
 
 namespace HighsoftSearch {
     export interface ResultFormatter {
-        (search: Search, item: KeywordItem): void;
+        (search: Search, item?: KeywordItem): void;
     }
 }

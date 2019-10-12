@@ -7,7 +7,7 @@
 namespace HighsoftSearch {
     export interface KeywordItem {
         title: string;
-        url: URL;
+        url: string;
         weight: number;
     }
 }
