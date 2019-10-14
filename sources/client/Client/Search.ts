@@ -131,7 +131,7 @@ namespace HighsoftSearch {
 
                     for (let searchTerm of searchTerms) {
 
-                        previewIndex = previewLowerCase.indexOf(searchTerm);
+                        previewIndex = previewLowerCase.indexOf(searchTerm.toLowerCase());
 
                         if (previewIndex >= 0) {
                             break;
@@ -139,10 +139,10 @@ namespace HighsoftSearch {
                     }
 
                     if (previewIndex < 10) {
-                        previewEnd = 20;
+                        previewEnd = 21;
                     }
                     else {
-                        previewEnd = previewIndex + 10;
+                        previewEnd = previewIndex + 11;
                         previewStart = previewIndex - 10;
                     }
 

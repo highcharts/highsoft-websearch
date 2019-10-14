@@ -210,7 +210,7 @@ var HighsoftSearch;
                 try {
                     for (var searchTerms_1 = __values(searchTerms), searchTerms_1_1 = searchTerms_1.next(); !searchTerms_1_1.done; searchTerms_1_1 = searchTerms_1.next()) {
                         var searchTerm = searchTerms_1_1.value;
-                        previewIndex = previewLowerCase.indexOf(searchTerm);
+                        previewIndex = previewLowerCase.indexOf(searchTerm.toLowerCase());
                         if (previewIndex >= 0) {
                             break;
                         }
@@ -224,10 +224,10 @@ var HighsoftSearch;
                     finally { if (e_1) throw e_1.error; }
                 }
                 if (previewIndex < 10) {
-                    previewEnd = 20;
+                    previewEnd = 21;
                 }
                 else {
-                    previewEnd = previewIndex + 10;
+                    previewEnd = previewIndex + 11;
                     previewStart = previewIndex - 10;
                 }
                 if (previewIndex === -1) {
