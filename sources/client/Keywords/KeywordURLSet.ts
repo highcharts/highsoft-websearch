@@ -8,10 +8,10 @@ namespace HighsoftSearch {
     export class KeywordURLSet {
 
         /* *
-        *
-        *  Static Functions
-        *
-        * */
+         *
+         *  Static Functions
+         *
+         * */
 
         private static reducer (items: Record<string, KeywordItem>, item: Array<string>): Record<string, KeywordItem> {
 
@@ -29,10 +29,10 @@ namespace HighsoftSearch {
         }
 
         /* *
-        *
-        *  Constructor
-        *
-        * */
+         *
+         *  Constructor
+         *
+         * */
 
         public constructor (keyword: string, content?: string) {
 
@@ -48,10 +48,10 @@ namespace HighsoftSearch {
         }
 
         /* *
-        *
-        *  Properties
-        *
-        * */
+         *
+         *  Properties
+         *
+         * */
 
         private _items: Record<string, KeywordItem>;
         private _keyword: string;
@@ -65,10 +65,10 @@ namespace HighsoftSearch {
         }
 
         /* *
-        *
-        *  Functions
-        *
-        * */
+         *
+         *  Functions
+         *
+         * */
 
         public addURL (url: string, weight: number, title: string) {
             this._items[url] = {

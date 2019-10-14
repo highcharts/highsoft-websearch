@@ -61,7 +61,7 @@ export class Application {
 
     public static main (): void {
 
-        const argv = process.argv.map(CLI.Options.argumentMapper);
+        const argv = process.argv.slice(2).map(CLI.Options.argumentMapper);
 
         if (argv.includes('--help') || argv.length === 0) {
             Application.success(CLI.HELP);

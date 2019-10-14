@@ -4,6 +4,14 @@
  *
  * */
 declare namespace HighsoftSearch {
+    function connect(basePath: string, inputElementID: string, outputElementID: string, buttonElementID: string): Search;
+}
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+declare namespace HighsoftSearch {
     class Download {
         static fromURL(url: string, timeout?: number): Promise<Download>;
         private constructor();
@@ -34,7 +42,7 @@ declare namespace HighsoftSearch {
  * */
 declare namespace HighsoftSearch {
     class Search {
-        private static defaultResultFormatter;
+        private static defaultResultRenderer;
         static preview(search: Search, item: KeywordItem): Promise<string>;
         constructor(basePath: string, inputElement: HTMLInputElement, outputElement: HTMLElement, buttonElement: HTMLElement);
         private _basePath;
@@ -42,7 +50,7 @@ declare namespace HighsoftSearch {
         private _inputElement;
         private _outputElement;
         private _query;
-        private _resultFormatter;
+        private _resultRenderer;
         private _terms;
         private _timeout;
         readonly basePath: string;
@@ -50,7 +58,7 @@ declare namespace HighsoftSearch {
         readonly inputElement: HTMLInputElement;
         readonly outputElement: HTMLElement;
         readonly query: (string | undefined);
-        resultFormatter: ResultFormatter;
+        resultRenderer: ResultFormatter;
         readonly terms: (Array<string> | undefined);
         private onButtonClick;
         private onInputKeyDown;
@@ -62,7 +70,6 @@ declare namespace HighsoftSearch {
         private hideResults;
         private showResults;
     }
-    function connect(basePath: string, inputElementID: string, outputElementID: string, buttonElementID: string): Search;
 }
 /*!*
  *
@@ -84,8 +91,8 @@ declare namespace HighsoftSearch {
 declare namespace HighsoftSearch {
     interface KeywordItem {
         title: string;
-        url: string;
         weight: number;
+        url: string;
     }
 }
 /*!*

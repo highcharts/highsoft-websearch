@@ -6,6 +6,30 @@
  * */
 var HighsoftSearch;
 (function (HighsoftSearch) {
+    function connect(basePath, inputElementID, outputElementID, buttonElementID) {
+        var inputElement = document.getElementById(inputElementID);
+        if (!(inputElement instanceof HTMLInputElement)) {
+            throw new Error('Input element not found.');
+        }
+        var outputElement = document.getElementById(outputElementID);
+        if (!(outputElement instanceof HTMLElement)) {
+            throw new Error('Output element not found.');
+        }
+        var buttonElement = document.getElementById(buttonElementID);
+        if (!(buttonElement instanceof HTMLElement)) {
+            throw new Error('Button element not found.');
+        }
+        return new HighsoftSearch.Search(basePath, inputElement, outputElement, buttonElement);
+    }
+    HighsoftSearch.connect = connect;
+})(HighsoftSearch || (HighsoftSearch = {}));
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+var HighsoftSearch;
+(function (HighsoftSearch) {
     var Download = (function () {
         function Download(url, statusCode, contentType, content) {
             this._content = content;
@@ -17,7 +41,6 @@ var HighsoftSearch;
             if (timeout === void 0) { timeout = 60000; }
             return new Promise(function (resolve, reject) {
                 var request = new XMLHttpRequest();
-                var timeout = NaN;
                 request.open('GET', url.toString(), true);
                 request.onerror = function () {
                     clearTimeout(timeout);
@@ -26,12 +49,14 @@ var HighsoftSearch;
                 request.onload = function () {
                     clearTimeout(timeout);
                     try {
-                        resolve(new Download(new URL(request.responseURL), request.status, request.responseType, request.responseText));
+                        resolve(new Download(new URL(request.responseURL), request.status, (request.getResponseHeader('Content-Type') || 'text/plain'), request.response));
                     }
                     catch (error) {
                         reject(error);
                     }
                 };
+                request.responseType = 'text';
+                request.setRequestHeader('Content-Type', 'text/plain');
                 timeout = setTimeout(function () {
                     request.abort();
                     reject(new Error('Timeout'));
@@ -100,11 +125,11 @@ var HighsoftSearch;
             this._buttonElement = buttonElement;
             this._inputElement = inputElement;
             this._outputElement = outputElement;
-            this._resultFormatter = Search.defaultResultFormatter;
+            this._resultRenderer = Search.defaultResultRenderer;
             this._timeout = 0;
             this.addEventListeners();
         }
-        Search.defaultResultFormatter = function (search, item) {
+        Search.defaultResultRenderer = function (search, item) {
             var outputElement = search.outputElement;
             if (typeof item === 'undefined') {
                 outputElement.style.display = 'none';
@@ -178,13 +203,14 @@ var HighsoftSearch;
                     return '';
                 }
                 var preview = HighsoftSearch.KeywordFilter.getWords(downloadBody.innerText);
+                var previewLowerCase = preview.map(function (word) { return word.toLowerCase(); });
                 var previewIndex = -1;
                 var previewStart = 0;
                 var previewEnd = 0;
                 try {
                     for (var searchTerms_1 = __values(searchTerms), searchTerms_1_1 = searchTerms_1.next(); !searchTerms_1_1.done; searchTerms_1_1 = searchTerms_1.next()) {
                         var searchTerm = searchTerms_1_1.value;
-                        previewIndex = preview.indexOf(searchTerm);
+                        previewIndex = previewLowerCase.indexOf(searchTerm);
                         if (previewIndex >= 0) {
                             break;
                         }
@@ -204,8 +230,11 @@ var HighsoftSearch;
                     previewEnd = previewIndex + 10;
                     previewStart = previewIndex - 10;
                 }
+                if (previewIndex === -1) {
+                    return preview.slice(previewStart, previewEnd).join(' ');
+                }
                 return (preview.slice(previewStart, previewIndex).join(' ') +
-                    '<b>' + preview[previewIndex] + '</b>' +
+                    ' <b>' + preview[previewIndex] + '</b> ' +
                     preview.slice((previewIndex + 1), previewEnd).join(' '));
             })
                 .catch(function () { return ''; });
@@ -245,12 +274,12 @@ var HighsoftSearch;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Search.prototype, "resultFormatter", {
+        Object.defineProperty(Search.prototype, "resultRenderer", {
             get: function () {
-                return this._resultFormatter;
+                return this._resultRenderer;
             },
             set: function (value) {
-                this._resultFormatter = value;
+                this._resultRenderer = value;
             },
             enumerable: true,
             configurable: true
@@ -376,7 +405,7 @@ var HighsoftSearch;
                 .catch(function () { return []; });
         };
         Search.prototype.hideResults = function () {
-            this._resultFormatter.call(this, this);
+            this._resultRenderer.call(this, this);
         };
         Search.prototype.showResults = function (items) {
             var e_5, _a;
@@ -384,7 +413,7 @@ var HighsoftSearch;
             try {
                 for (var items_1 = __values(items), items_1_1 = items_1.next(); !items_1_1.done; items_1_1 = items_1.next()) {
                     var item = items_1_1.value;
-                    this._resultFormatter.call(this, this, item);
+                    this._resultRenderer.call(this, this, item);
                 }
             }
             catch (e_5_1) { e_5 = { error: e_5_1 }; }
@@ -398,22 +427,6 @@ var HighsoftSearch;
         return Search;
     }());
     HighsoftSearch.Search = Search;
-    function connect(basePath, inputElementID, outputElementID, buttonElementID) {
-        var inputElement = document.getElementById(inputElementID);
-        if (!(inputElement instanceof HTMLInputElement)) {
-            throw new Error('Input element not found.');
-        }
-        var outputElement = document.getElementById(outputElementID);
-        if (!(outputElement instanceof HTMLElement)) {
-            throw new Error('Output element not found.');
-        }
-        var buttonElement = document.getElementById(buttonElementID);
-        if (!(buttonElement instanceof HTMLElement)) {
-            throw new Error('Button element not found.');
-        }
-        return new Search(basePath, inputElement, outputElement, buttonElement);
-    }
-    HighsoftSearch.connect = connect;
 })(HighsoftSearch || (HighsoftSearch = {}));
 /*!*
  *
@@ -428,7 +441,7 @@ var HighsoftSearch;
         'net', 'of', 'on', 'or', 'org', 'our', 'shall', 'should', 'that', 'the',
         'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
     ];
-    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-\.])*[^\d\W])(?:\W|$)/;
+    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-\.])*[^\d\W])(?=\W|$)/;
     var KeywordFilter = (function () {
         function KeywordFilter() {
         }

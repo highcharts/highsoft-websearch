@@ -15,6 +15,13 @@ export class Dictionary<T> {
      *
      * */
 
+    /**
+     * Creates a new dictionary instance with support for JavaScript keywords as
+     * keys.
+     *
+     * @param dictionaries
+     * Copy items from given dictionary instances.
+     */
     public constructor (...dictionaries: Array<Dictionary<T>>) {
 
         let dictionary = dictionaries.shift();
@@ -53,10 +60,16 @@ export class Dictionary<T> {
     private _keys: Array<string>;
     private _values: Array<T>;
 
+    /**
+     * Returns all keys of the dictionary.
+     */
     public get keys (): Array<string> {
         return this._keys.slice();
     }
 
+    /**
+     * Returns all values of the dictionary.
+     */
     public get values (): Array<T> {
         return this._values.slice();
     }
@@ -67,6 +80,12 @@ export class Dictionary<T> {
      *
      * */
 
+    /**
+     * Returns the value for a given key, or `undefined` if not found.
+     *
+     * @param key
+     * Corresponding key of the value.
+     */
     public get (key: string): (T|undefined) {
 
         const keys = this._keys;
@@ -80,6 +99,16 @@ export class Dictionary<T> {
         return values[index];
     }
 
+    /**
+     * Sets the value for a given key. Removes the key, if no value is given or
+     * the value is `undefined`.
+     *
+     * @param key
+     * Corresponding key of the value.
+     * 
+     * @param value
+     * Value or `undefined` for removing the key.
+     */
     public set (key: string, value?: T): void {
 
         const keys = this._keys;

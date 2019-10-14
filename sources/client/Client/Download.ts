@@ -8,17 +8,15 @@ namespace HighsoftSearch {
     export class Download {
 
         /* *
-        *
-        *  Static Function
-        *
-        * */
+         *
+         *  Static Function
+         *
+         * */
 
         public static fromURL (url: string, timeout: number = 60000): Promise<Download> {
             return new Promise((resolve, reject) => {
 
                 const request = new XMLHttpRequest();
-
-                let timeout = NaN;
 
                 request.open('GET', url.toString(), true);
                 request.onerror = () => {
@@ -32,8 +30,8 @@ namespace HighsoftSearch {
                             new Download(
                                 new URL(request.responseURL),
                                 request.status,
-                                request.responseType,
-                                request.responseText
+                                (request.getResponseHeader('Content-Type') || 'text/plain'),
+                                request.response
                             )
                         );
                     }
@@ -41,19 +39,21 @@ namespace HighsoftSearch {
                         reject(error);
                     }
                 };
+                request.responseType = 'text';
+                request.setRequestHeader('Content-Type', 'text/plain');
                 timeout = setTimeout(() => {
                     request.abort();
                     reject(new Error('Timeout'));
-                }, timeout)
+                }, timeout);
                 request.send();
             });
         }
 
         /* *
-        *
-        *  Constructor
-        *
-        * */
+         *
+         *  Constructor
+         *
+         * */
 
         private constructor (url: URL, statusCode: number, contentType: string, content: string) {
             this._content = content;
@@ -63,10 +63,10 @@ namespace HighsoftSearch {
         }
 
         /* *
-        *
-        *  Properties
-        *
-        * */
+         *
+         *  Properties
+         *
+         * */
 
         private _content: string;
         private _contentType: string;

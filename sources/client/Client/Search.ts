@@ -13,7 +13,17 @@ namespace HighsoftSearch {
          *
          * */
 
-        private static defaultResultFormatter (search: Search, item?: KeywordItem): void {
+        /**
+         * The default renderer for search results. Contains special handling of
+         * rendering in lists and tables.
+         *
+         * @param search
+         * The search instance as a reference for rendering.
+         *
+         * @param item
+         * The search result in structure of a keyword item with title and URL.
+         */
+        private static defaultResultRenderer (search: Search, item?: KeywordItem): void {
 
             const outputElement = search.outputElement;
 
@@ -78,6 +88,15 @@ namespace HighsoftSearch {
                 .catch(() => undefined);
         }
 
+        /**
+         * Generates a preview text out of the URL content of a keyword item.
+         *
+         * @param search
+         * The search instance as a reference for rendering.
+         *
+         * @param item
+         * The search result in structure of a keyword item with title and URL.
+         */
         public static preview (search: Search, item: KeywordItem): Promise<string> {
 
             const searchTerms = search.terms;
@@ -104,6 +123,7 @@ namespace HighsoftSearch {
                     }
 
                     const preview = KeywordFilter.getWords(downloadBody.innerText);
+                    const previewLowerCase = preview.map(word => word.toLowerCase());
 
                     let previewIndex = -1;
                     let previewStart = 0;
@@ -111,7 +131,7 @@ namespace HighsoftSearch {
 
                     for (let searchTerm of searchTerms) {
 
-                        previewIndex = preview.indexOf(searchTerm);
+                        previewIndex = previewLowerCase.indexOf(searchTerm);
 
                         if (previewIndex >= 0) {
                             break;
@@ -126,9 +146,13 @@ namespace HighsoftSearch {
                         previewStart = previewIndex - 10;
                     }
 
+                    if (previewIndex === -1) {
+                        return preview.slice(previewStart, previewEnd).join(' ');
+                    }
+
                     return (
                         preview.slice(previewStart, previewIndex).join(' ') +
-                        '<b>' + preview[previewIndex] + '</b>' +
+                        ' <b>' + preview[previewIndex] + '</b> ' +
                         preview.slice((previewIndex + 1), previewEnd).join(' ')
                     );
                 })
@@ -141,13 +165,29 @@ namespace HighsoftSearch {
          *
          * */
 
+        /**
+         * Creates a new search instance with given base path, where keyword
+         * files can be found.
+         *
+         * @param basePath
+         * Base path to the keyword files.
+         *
+         * @param inputElement
+         * Input element of search control.
+         *
+         * @param outputElement
+         * Output element of search control.
+         *
+         * @param buttonElement
+         * Button element of search control.
+         */
         public constructor (basePath: string, inputElement: HTMLInputElement, outputElement: HTMLElement, buttonElement: HTMLElement) {
 
             this._basePath = basePath;
             this._buttonElement = buttonElement;
             this._inputElement = inputElement;
             this._outputElement = outputElement;
-            this._resultFormatter = Search.defaultResultFormatter;
+            this._resultRenderer = Search.defaultResultRenderer;
             this._timeout = 0;
 
             this.addEventListeners();
@@ -164,7 +204,7 @@ namespace HighsoftSearch {
         private _inputElement: HTMLInputElement;
         private _outputElement: HTMLElement;
         private _query: (string|undefined);
-        private _resultFormatter: ResultFormatter;
+        private _resultRenderer: ResultFormatter;
         private _terms: (Array<string>|undefined);
         private _timeout: number;
 
@@ -188,12 +228,12 @@ namespace HighsoftSearch {
             return this._query;
         }
 
-        public get resultFormatter (): ResultFormatter {
-            return this._resultFormatter;
+        public get resultRenderer (): ResultFormatter {
+            return this._resultRenderer;
         }
 
-        public set resultFormatter (value: ResultFormatter) {
-            this._resultFormatter = value;
+        public set resultRenderer (value: ResultFormatter) {
+            this._resultRenderer = value;
         }
 
         public get terms (): (Array<string>|undefined) {
@@ -324,7 +364,7 @@ namespace HighsoftSearch {
         }
 
         private hideResults (): void {
-            this._resultFormatter.call(this, this);
+            this._resultRenderer.call(this, this);
         }
 
         private showResults (items: Array<KeywordItem>): void {
@@ -332,31 +372,8 @@ namespace HighsoftSearch {
             this._outputElement.innerHTML = '';
 
             for (let item of items) {
-                this._resultFormatter.call(this, this, item);
+                this._resultRenderer.call(this, this, item);
             }
         }
-    }
-
-    export function connect (basePath: string, inputElementID: string, outputElementID: string, buttonElementID: string): Search {
-
-        const inputElement = document.getElementById(inputElementID);
-
-        if (!(inputElement instanceof HTMLInputElement)) {
-            throw new Error('Input element not found.');
-        }
-
-        const outputElement = document.getElementById(outputElementID);
-
-        if (!(outputElement instanceof HTMLElement)) {
-            throw new Error('Output element not found.');
-        }
-
-        const buttonElement = document.getElementById(buttonElementID);
-
-        if (!(buttonElement instanceof HTMLElement)) {
-            throw new Error('Button element not found.');
-        }
-
-        return new Search(basePath, inputElement, outputElement, buttonElement);
     }
 }
