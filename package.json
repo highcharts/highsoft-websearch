@@ -22,11 +22,11 @@
     },
     "files": [
         "./bin/",
-        "./client",
+        "./client/",
         "./lib/",
-        "hssearch.json",
-        "LICENSE.md",
-        "README.md"
+        "./hssearch.json",
+        "./LICENSE.md",
+        "./README.md"
     ],
     "keywords": [
         "Highsoft",
