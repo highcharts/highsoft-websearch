@@ -6,16 +6,22 @@
  * */
 var HighsoftSearch;
 (function (HighsoftSearch) {
-    function connect(basePath, inputElementID, outputElementID, buttonElementID) {
-        var inputElement = document.getElementById(inputElementID);
+    function connect(basePath, inputElement, buttonElement, outputElement) {
+        if (typeof inputElement === 'string') {
+            inputElement = (document.getElementById(inputElement) || '');
+        }
         if (!(inputElement instanceof HTMLInputElement)) {
             throw new Error('Input element not found.');
         }
-        var outputElement = document.getElementById(outputElementID);
+        if (typeof outputElement === 'string') {
+            outputElement = (document.getElementById(outputElement) || '');
+        }
         if (!(outputElement instanceof HTMLElement)) {
             throw new Error('Output element not found.');
         }
-        var buttonElement = document.getElementById(buttonElementID);
+        if (typeof buttonElement === 'string') {
+            buttonElement = (document.getElementById(buttonElement) || '');
+        }
         if (!(buttonElement instanceof HTMLElement)) {
             throw new Error('Button element not found.');
         }
@@ -117,6 +123,22 @@ var __values = (this && this.__values) || function(o) {
     };
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 var HighsoftSearch;
 (function (HighsoftSearch) {
     var Search = (function () {
@@ -125,6 +147,7 @@ var HighsoftSearch;
             this._buttonElement = buttonElement;
             this._inputElement = inputElement;
             this._outputElement = outputElement;
+            this._pendingPreviews = [];
             this._resultRenderer = Search.defaultResultRenderer;
             this._timeout = 0;
             this.addEventListeners();
@@ -179,12 +202,7 @@ var HighsoftSearch;
             headElement.appendChild(linkElement);
             resultElement.setAttribute('class', 'SearchResult');
             outputElement.style.display = '';
-            Search
-                .preview(search, item)
-                .then(function (html) {
-                previewElement.innerHTML = html;
-            })
-                .catch(function () { return undefined; });
+            return previewElement;
         };
         Search.preview = function (search, item) {
             var searchTerms = search.terms;
@@ -291,24 +309,48 @@ var HighsoftSearch;
             enumerable: true,
             configurable: true
         });
-        Search.prototype.onButtonClick = function (e) {
+        Search.prototype.onButtonClick = function (evt) {
             clearTimeout(this._timeout);
-            if (e.target !== this._buttonElement) {
+            if (evt.target !== this._buttonElement) {
                 return;
             }
             this.onTimeout();
         };
-        Search.prototype.onInputKeyDown = function (e) {
+        Search.prototype.onInputKeyDown = function (evt) {
             clearTimeout(this._timeout);
             var inputElement = this._inputElement;
-            if (e.target !== inputElement) {
+            if (evt.target !== inputElement) {
                 return;
             }
-            if (e.key === 'Enter') {
-                this.onButtonClick(e);
+            if (evt.key === 'Enter') {
+                this.onButtonClick(evt);
                 return;
             }
             this._timeout = setTimeout(this.onTimeout.bind(this), 500);
+        };
+        Search.prototype.onScroll = function () {
+            var pendingPreviews = this._pendingPreviews;
+            var scrollBorder = (window.innerHeight + window.scrollY + 16);
+            var pendingPreview;
+            var _loop_1 = function () {
+                var _a = __read(pendingPreview, 2), previewElement = _a[0], previewItem = _a[1];
+                if (previewElement.offsetTop > scrollBorder) {
+                    pendingPreviews.unshift(pendingPreview);
+                    return "break";
+                }
+                Search
+                    .preview(this_1, previewItem)
+                    .then(function (html) {
+                    previewElement.innerHTML = html;
+                })
+                    .catch(function () { return undefined; });
+            };
+            var this_1 = this;
+            while (typeof (pendingPreview = pendingPreviews.shift()) !== 'undefined') {
+                var state_1 = _loop_1();
+                if (state_1 === "break")
+                    break;
+            }
         };
         Search.prototype.onTimeout = function () {
             var _this = this;
@@ -333,6 +375,11 @@ var HighsoftSearch;
         Search.prototype.addEventListeners = function () {
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
+            if (this.outputElement.ownerDocument) {
+                console.log('Scroll listening');
+                this.outputElement.ownerDocument
+                    .addEventListener('scroll', this.onScroll.bind(this));
+            }
         };
         Search.prototype.consolidate = function (keywordFiles) {
             var e_2, _a, e_3, _b;
@@ -409,11 +456,17 @@ var HighsoftSearch;
         };
         Search.prototype.showResults = function (items) {
             var e_5, _a;
+            var pendingPreviews = this._pendingPreviews;
             this._outputElement.innerHTML = '';
+            var previewElement;
             try {
                 for (var items_1 = __values(items), items_1_1 = items_1.next(); !items_1_1.done; items_1_1 = items_1.next()) {
                     var item = items_1_1.value;
-                    this._resultRenderer.call(this, this, item);
+                    previewElement = this._resultRenderer.call(this, this, item);
+                    if (typeof previewElement === 'undefined') {
+                        continue;
+                    }
+                    pendingPreviews.push([previewElement, item]);
                 }
             }
             catch (e_5_1) { e_5 = { error: e_5_1 }; }
@@ -423,6 +476,7 @@ var HighsoftSearch;
                 }
                 finally { if (e_5) throw e_5.error; }
             }
+            this.onScroll();
         };
         return Search;
     }());

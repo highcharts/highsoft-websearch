@@ -8,21 +8,32 @@
  * Namespace in the web browser on the client side.
  */
 namespace HighsoftSearch {
-    export function connect (basePath: string, inputElementID: string, outputElementID: string, buttonElementID: string): Search {
+    export function connect (
+        basePath: string,
+        inputElement: (string|HTMLInputElement),
+        buttonElement: (string|HTMLElement),
+        outputElement: (string|HTMLElement)
+    ): Search {
 
-        const inputElement = document.getElementById(inputElementID);
+        if (typeof inputElement === 'string') {
+            inputElement = ((document.getElementById(inputElement) as HTMLInputElement) || '');
+        }
 
         if (!(inputElement instanceof HTMLInputElement)) {
             throw new Error('Input element not found.');
         }
 
-        const outputElement = document.getElementById(outputElementID);
+        if (typeof outputElement === 'string') {
+            outputElement = (document.getElementById(outputElement) || '');
+        }
 
         if (!(outputElement instanceof HTMLElement)) {
             throw new Error('Output element not found.');
         }
 
-        const buttonElement = document.getElementById(buttonElementID);
+        if (typeof buttonElement === 'string') {
+            buttonElement = (document.getElementById(buttonElement) || '');
+        }
 
         if (!(buttonElement instanceof HTMLElement)) {
             throw new Error('Button element not found.');

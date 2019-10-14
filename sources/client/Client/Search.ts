@@ -15,7 +15,8 @@ namespace HighsoftSearch {
 
         /**
          * The default renderer for search results. Contains special handling of
-         * rendering in lists and tables.
+         * rendering in lists and tables. Returns the preview element of the
+         * result for lazy loading.
          *
          * @param search
          * The search instance as a reference for rendering.
@@ -23,7 +24,7 @@ namespace HighsoftSearch {
          * @param item
          * The search result in structure of a keyword item with title and URL.
          */
-        private static defaultResultRenderer (search: Search, item?: KeywordItem): void {
+        private static defaultResultRenderer (search: Search, item?: KeywordItem): (HTMLElement|undefined) {
 
             const outputElement = search.outputElement;
 
@@ -80,12 +81,7 @@ namespace HighsoftSearch {
             resultElement.setAttribute('class', 'SearchResult');
             outputElement.style.display = '';
 
-            Search
-                .preview(search, item)
-                .then(html => {
-                    previewElement.innerHTML = html;
-                })
-                .catch(() => undefined);
+            return previewElement;
         }
 
         /**
@@ -187,6 +183,7 @@ namespace HighsoftSearch {
             this._buttonElement = buttonElement;
             this._inputElement = inputElement;
             this._outputElement = outputElement;
+            this._pendingPreviews = [];
             this._resultRenderer = Search.defaultResultRenderer;
             this._timeout = 0;
 
@@ -203,6 +200,7 @@ namespace HighsoftSearch {
         private _buttonElement: HTMLElement;
         private _inputElement: HTMLInputElement;
         private _outputElement: HTMLElement;
+        private _pendingPreviews: Array<[HTMLElement, KeywordItem]>;
         private _query: (string|undefined);
         private _resultRenderer: ResultFormatter;
         private _terms: (Array<string>|undefined);
@@ -246,33 +244,58 @@ namespace HighsoftSearch {
          *
          * */
 
-        private onButtonClick (e: Event): void {
+        private onButtonClick (evt: Event): void {
 
             clearTimeout(this._timeout);
 
-            if (e.target !== this._buttonElement) {
+            if (evt.target !== this._buttonElement) {
                 return;
             }
 
             this.onTimeout();
         }
 
-        private onInputKeyDown (e: KeyboardEvent): void {
+        private onInputKeyDown (evt: KeyboardEvent): void {
 
             clearTimeout(this._timeout);
 
             const inputElement = this._inputElement;
 
-            if (e.target !== inputElement) {
+            if (evt.target !== inputElement) {
                 return;
             }
 
-            if (e.key === 'Enter') {
-                this.onButtonClick(e);
+            if (evt.key === 'Enter') {
+                this.onButtonClick(evt);
                 return;
             }
 
             this._timeout = setTimeout(this.onTimeout.bind(this), 500);
+        }
+
+        private onScroll (): void {
+
+            const pendingPreviews = this._pendingPreviews;
+            const scrollBorder = (window.innerHeight + window.scrollY + 16);
+
+            let pendingPreview: ([HTMLElement, KeywordItem]|undefined);
+
+            while (typeof (pendingPreview = pendingPreviews.shift()) !== 'undefined') {
+
+                const [ previewElement, previewItem ] = pendingPreview;
+
+                if (previewElement.offsetTop > scrollBorder) {
+                    pendingPreviews.unshift(pendingPreview);
+                    break;
+                }
+
+                Search
+                    .preview(this, previewItem)
+                    .then(html => {
+                        previewElement.innerHTML = html;
+                    })
+                    .catch(() => undefined);
+            }
         }
 
         private onTimeout (): void {
@@ -305,8 +328,15 @@ namespace HighsoftSearch {
          * */
 
         private addEventListeners (): void {
+
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
+
+            if (this.outputElement.ownerDocument) {
+                console.log('Scroll listening');
+                this.outputElement.ownerDocument
+                    .addEventListener('scroll', this.onScroll.bind(this));
+            }
         }
 
         private consolidate (keywordFiles: Array<KeywordURLSet>): Array<KeywordItem> {
@@ -367,13 +397,26 @@ namespace HighsoftSearch {
             this._resultRenderer.call(this, this);
         }
 
-        private showResults (items: Array<KeywordItem>): void {
+        private showResults (keywordItems: Array<KeywordItem>): void {
+
+            const pendingPreviews = this._pendingPreviews;
 
             this._outputElement.innerHTML = '';
 
-            for (let item of items) {
-                this._resultRenderer.call(this, this, item);
+            let previewElement: (HTMLElement|undefined);
+
+            for (let keywordItem of keywordItems) {
+
+                previewElement = this._resultRenderer.call(this, this, keywordItem);
+
+                if (typeof previewElement === 'undefined') {
+                    continue;
+                }
+
+                pendingPreviews.push([previewElement, keywordItem]);
             }
+
+            this.onScroll();
         }
     }
 }

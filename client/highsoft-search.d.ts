@@ -4,7 +4,7 @@
  *
  * */
 declare namespace HighsoftSearch {
-    function connect(basePath: string, inputElementID: string, outputElementID: string, buttonElementID: string): Search;
+    function connect(basePath: string, inputElement: (string | HTMLInputElement), buttonElement: (string | HTMLElement), outputElement: (string | HTMLElement)): Search;
 }
 /*!*
  *
@@ -32,7 +32,7 @@ declare namespace HighsoftSearch {
  * */
 declare namespace HighsoftSearch {
     interface ResultFormatter {
-        (search: Search, item?: KeywordItem): void;
+        (search: Search, item?: KeywordItem): (HTMLElement | undefined);
     }
 }
 /*!*
@@ -49,6 +49,7 @@ declare namespace HighsoftSearch {
         private _buttonElement;
         private _inputElement;
         private _outputElement;
+        private _pendingPreviews;
         private _query;
         private _resultRenderer;
         private _terms;
@@ -62,6 +63,7 @@ declare namespace HighsoftSearch {
         readonly terms: (Array<string> | undefined);
         private onButtonClick;
         private onInputKeyDown;
+        private onScroll;
         private onTimeout;
         private addEventListeners;
         private consolidate;
