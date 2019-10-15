@@ -146,7 +146,7 @@ export abstract class Load {
                     keywordURLSets.set(keyword, (keywordURLSet = new L.KeywordURLSet(keyword)));
                 }
 
-                keywordURLSet.addURL(inspector.getKeywordWeight(keyword), linkAlias, '');
+                keywordURLSet.addURL(inspector.getKeywordWeight(keyword), linkAlias, title);
             }
         }
     }
