@@ -15,6 +15,10 @@ namespace HighsoftSearch {
 
         private static reducer (items: Record<string, KeywordItem>, item: Array<string>): Record<string, KeywordItem> {
 
+            if (item.length < 3) {
+                return items;
+            }
+
             items[item[1]] = {
                 title: item[2],
                 url: item[1],
@@ -25,7 +29,7 @@ namespace HighsoftSearch {
         }
 
         public static sorter (itemA: KeywordItem, itemB: KeywordItem): number {
-            return (itemA.weight - itemB.weight);
+            return (itemB.weight - itemA.weight);
         }
 
         /* *

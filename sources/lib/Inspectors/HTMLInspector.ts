@@ -194,7 +194,7 @@ export class HTMLInspector extends Inspectors.Inspector {
                 matchURLString = matchURL.toString();
 
                 if (!links.includes(matchURLString)) {
-                    links.push(matchURL.toString());
+                    links.push(matchURLString);
                 }
             }
             catch (error) {

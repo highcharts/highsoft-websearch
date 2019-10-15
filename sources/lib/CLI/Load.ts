@@ -128,14 +128,8 @@ export abstract class Load {
                     keywordURLSets.set(keyword, (keywordURLSet = new L.KeywordURLSet(keyword)));
                 }
 
-                try {
-                    keywordURLSet.addURL(url, inspector.getKeywordWeight(keyword), title);
-                    linkAliases.push(...inspector.getLinkAliases(url));
-                }
-                catch (error) {
-                    console.log(keyword);
-                    console.log(keywordURLSets.get(keyword), keywordURLSet);
-                }
+                keywordURLSet.addURL(inspector.getKeywordWeight(keyword), url, title);
+                linkAliases.push(...inspector.getLinkAliases(url));
             }
         }
 
@@ -152,9 +146,7 @@ export abstract class Load {
                     keywordURLSets.set(keyword, (keywordURLSet = new L.KeywordURLSet(keyword)));
                 }
 
-                if (!keywordURLSet.containsURL(url)) {
-                    keywordURLSet.addURL(linkAlias, inspector.getKeywordWeight(keyword), '');
-                }
+                keywordURLSet.addURL(inspector.getKeywordWeight(keyword), linkAlias, '');
             }
         }
     }

@@ -376,7 +376,6 @@ var HighsoftSearch;
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
             if (this.outputElement.ownerDocument) {
-                console.log('Scroll listening');
                 this.outputElement.ownerDocument
                     .addEventListener('scroll', this.onScroll.bind(this));
             }
@@ -454,25 +453,25 @@ var HighsoftSearch;
         Search.prototype.hideResults = function () {
             this._resultRenderer.call(this, this);
         };
-        Search.prototype.showResults = function (items) {
+        Search.prototype.showResults = function (keywordItems) {
             var e_5, _a;
             var pendingPreviews = this._pendingPreviews;
             this._outputElement.innerHTML = '';
             var previewElement;
             try {
-                for (var items_1 = __values(items), items_1_1 = items_1.next(); !items_1_1.done; items_1_1 = items_1.next()) {
-                    var item = items_1_1.value;
-                    previewElement = this._resultRenderer.call(this, this, item);
+                for (var keywordItems_1 = __values(keywordItems), keywordItems_1_1 = keywordItems_1.next(); !keywordItems_1_1.done; keywordItems_1_1 = keywordItems_1.next()) {
+                    var keywordItem = keywordItems_1_1.value;
+                    previewElement = this._resultRenderer.call(this, this, keywordItem);
                     if (typeof previewElement === 'undefined') {
                         continue;
                     }
-                    pendingPreviews.push([previewElement, item]);
+                    pendingPreviews.push([previewElement, keywordItem]);
                 }
             }
             catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
-                    if (items_1_1 && !items_1_1.done && (_a = items_1.return)) _a.call(items_1);
+                    if (keywordItems_1_1 && !keywordItems_1_1.done && (_a = keywordItems_1.return)) _a.call(keywordItems_1);
                 }
                 finally { if (e_5) throw e_5.error; }
             }
@@ -539,6 +538,9 @@ var HighsoftSearch;
             }
         }
         KeywordURLSet.reducer = function (items, item) {
+            if (item.length < 3) {
+                return items;
+            }
             items[item[1]] = {
                 title: item[2],
                 url: item[1],
@@ -547,7 +549,7 @@ var HighsoftSearch;
             return items;
         };
         KeywordURLSet.sorter = function (itemA, itemB) {
-            return (itemA.weight - itemB.weight);
+            return (itemB.weight - itemA.weight);
         };
         Object.defineProperty(KeywordURLSet.prototype, "items", {
             get: function () {

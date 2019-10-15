@@ -8,6 +8,7 @@ import * as CLI from './index';
 import * as FS from 'fs';
 import * as L from '../index';
 import * as Path from 'path';
+import { KeywordURLSet } from '../Keywords';
 
 export class Application {
 
@@ -247,11 +248,53 @@ export class Application {
         return this.downloadAll(depth);
     }
 
+    private prepareKeywordURLSets (directoryPath: string): Promise<void> {
+        return new Promise((resolve) => {
+
+            if (
+                !FS.existsSync(directoryPath) ||
+                !FS.statSync(directoryPath).isDirectory()
+            ) {
+                resolve();
+                return;
+            }
+
+            const directoryEntries = FS.readdirSync(directoryPath);
+            const keywordURLSets = this._keywordURLSets;
+
+            let keyword: (string|undefined);
+            let keywordURLSet: KeywordURLSet;
+
+            for (let directoryEntry of directoryEntries) {
+
+                if (!directoryEntry.endsWith('.txt')) {
+                    continue;
+                }
+
+                try {
+                    keyword = Path.basename(directoryEntry, Path.extname(directoryEntry));
+                    keywordURLSet = new KeywordURLSet(keyword, FS.readFileSync(Path.join(directoryPath, directoryEntry)).toString());
+                    keywordURLSets.set(keyword, keywordURLSet);
+                }
+                catch (error) {
+                    // silent fail
+                }
+            }
+
+            resolve();
+        });
+    }
+
     private run (): Promise<void> {
+
+        const depthOptions = this._options.depth;
+        const outOptions = this._options.out;
+
         return Promise
             .resolve()
-            .then(() => this.loadAll(this._options.depth))
-            .then(() => this.saveAll(this._options.out))
+            .then(() => this.prepareKeywordURLSets(outOptions))
+            .then(() => this.loadAll(depthOptions))
+            .then(() => this.saveAll(outOptions))
             .then(() => 'Done.')
             .then(Application.success)
             .catch(Application.error);
@@ -279,12 +322,12 @@ export class Application {
 
         const filePath = Path.join(directoryPath, (keywordURLSet.keyword + '.txt'));
 
-        Application.log(`Save ${filePath}...`);
+        // Application.log(`Save ${filePath}...`);
 
         return new Promise((resolve, reject) => {
             FS.writeFile(
                 filePath,
-                keywordURLSet.toString(),
+                (keywordURLSet + '\n'),
                 (error) => {
                     if (error) {
                         reject(error);
@@ -297,7 +340,7 @@ export class Application {
         });
     }
 
-    private sideloadAll (basePath: string, depth: number): Promise<void> {
+    private sideloadAll (localPath: string, depth: number): Promise<void> {
 
         if (depth === 0) {
             return Promise.resolve();
@@ -321,8 +364,8 @@ export class Application {
             }
         
             try {
-                loadPath = Path.join(basePath, loadURL.substr(baseURLString.length));
                 loadTasks.set(loadURL, true);
+                loadPath = Path.join(localPath, loadURL.substr(baseURLString.length));
                 sideloadPromises.push(this.sideloadPath(baseURL, loadPath, depth));
             }
             catch (error) {
@@ -333,7 +376,7 @@ export class Application {
         return Promise
             .all(sideloadPromises)
             .then(() => {
-                return this.sideloadAll(basePath, --depth);
+                return this.sideloadAll(localPath, --depth);
             });
     }
 
@@ -347,7 +390,6 @@ export class Application {
 
                 if (sideload.hasFailed) {
                     Application.log(`FAILED: ${path}`);
-                    console.log(sideload);
                     return;
                 }
 

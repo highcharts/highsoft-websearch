@@ -12,7 +12,6 @@ const ServerPath = require('path');
 
 const configuration = {
     baseDirectory: process.cwd(),
-    serverAddress: '127.0.0.1',
     serverPort: 8000
 };
 
@@ -27,19 +26,19 @@ function onError (error) {
 }
 
 function responseNotFound (response) {
-    console.log('=> 404 Not Found');
+    console.info('=> 404 Not Found');
     response.writeHead(404, 'Not Found');
     response.end();
 }
 
 function responseNotSupported (response) {
-    console.log('=> 405 Method Not Allowed');
+    console.info('=> 405 Method Not Allowed');
     response.writeHead(405, 'Method Not Allowed');
     response.end();
 }
 
 function responseRedirect (response, location) {
-    console.log('=> 303 See Other');
+    console.info('=> 303 See Other');
     response.writeHead(303, 'See Other', { 'Location': location });
     response.end();
 }
@@ -141,12 +140,12 @@ HTTP
     .createServer(serve)
     .on('clientError', onClientError)
     .on('error', onError)
-    .listen(configuration.serverPort, configuration.serverAddress, () => {
+    .listen(configuration.serverPort, () => {
 
-        const host = configuration.serverAddress + ':' + configuration.serverPort;
+        const host = 'localhost:' + configuration.serverPort;
         const hostURL = 'http://' + host + '/tests_results.html';
 
-        console.log(`Listening on ${host}...`);
+        console.info(`Listening on ${host}...`);
 
         switch (process.platform) {
             default:

@@ -333,7 +333,6 @@ namespace HighsoftSearch {
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
 
             if (this.outputElement.ownerDocument) {
-                console.log('Scroll listening');
                 this.outputElement.ownerDocument
                     .addEventListener('scroll', this.onScroll.bind(this));
             }

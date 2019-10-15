@@ -53,7 +53,6 @@ export class Download extends Load {
                             return;
                         }
                         catch (error) {
-                            console.log(error);
                             // silent fail
                         }
                     }

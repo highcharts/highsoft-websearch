@@ -16,6 +16,10 @@ export class KeywordURLSet {
 
     private static reducer (items: Record<string, Keywords.KeywordItem>, item: Array<string>): Record<string, Keywords.KeywordItem> {
 
+        if (item.length < 3) {
+            return items;
+        }
+
         items[item[1]] = {
             title: item[2],
             url: item[1],
@@ -26,7 +30,7 @@ export class KeywordURLSet {
     }
 
     public static sorter (itemA: Keywords.KeywordItem, itemB: Keywords.KeywordItem): number {
-        return (itemA.weight - itemB.weight);
+        return (itemB.weight - itemA.weight);
     }
 
     /* *
@@ -71,12 +75,20 @@ export class KeywordURLSet {
      *
      * */
 
-    public addURL (url: string, weight: number, title: string) {
-        this._items[url] = {
-            title,
-            url,
-            weight
-        };
+    public addURL (weight: number, url: string, title: string) {
+
+        const items = this._items;
+
+        if (
+            typeof items[url] === 'undefined' ||
+            items[url].weight < weight
+        ) {
+            items[url] = {
+                title,
+                url,
+                weight
+            };
+        }
     }
 
     public containsURL (url: string): boolean {
