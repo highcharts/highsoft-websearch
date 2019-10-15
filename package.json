@@ -4,11 +4,11 @@
     "description": "Simple search system",
     "license": "SEE LICENSE IN LICENSE.md",
     "homepage": "https://github.com/highcharts/highsoft-search#readme",
-    "main": "./lib/index.js",
+    "main": "lib/index.js",
     "name": "highsoft-search",
     "version": "0.0.1",
     "bin": {
-        "highsoft-search": "./bin/highsoft-search"
+        "highsoft-search": "bin/highsoft-search"
     },
     "bugs": {
         "url": "https://github.com/highcharts/highsoft-search/issues"
@@ -21,12 +21,12 @@
         "node": ">=10"
     },
     "files": [
-        "./bin/",
-        "./client/",
-        "./lib/",
-        "./hssearch.json",
-        "./LICENSE.md",
-        "./README.md"
+        "bin/",
+        "client/",
+        "lib/",
+        "hssearch.json",
+        "LICENSE.md",
+        "README.md"
     ],
     "keywords": [
         "Highsoft",

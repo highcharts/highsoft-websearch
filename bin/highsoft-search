@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require('../lib/CLI/Application.js').default.main();
+require('../lib/CLI/index.js').Application.main();
