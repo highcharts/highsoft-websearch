@@ -20,7 +20,7 @@ export class Options {
             case '-h':
                 return '--help';
             case '-v':
-                return '--version';
+                return '--verbose';
         }
 
         return argv;
@@ -59,6 +59,8 @@ export class Options {
                         arg = argv[++i];
                         options._timeout = parseInt(arg);
                         continue;
+                    case '--verbose':
+                        options._verbose = true;
                 }
             }
 
@@ -130,6 +132,7 @@ export class Options {
         this._depth = 1;
         this._out = process.cwd();
         this._timeout = 60000;
+        this._verbose = false;
     }
 
     /* *
@@ -144,6 +147,7 @@ export class Options {
     private _sideload: (string|undefined);
     private _out: string;
     private _timeout: number;
+    private _verbose: boolean;
 
     public get allowForeignDomains (): boolean {
         return this._allowForeignDomains;
@@ -168,6 +172,10 @@ export class Options {
     public get timeout (): number {
         return this._timeout;
     }
+
+    public get verbose (): boolean {
+        return this._verbose;
+    }
 }
 
 /* *
@@ -184,6 +192,7 @@ export interface OptionsJSON {
         out?: string;
         sideload?: string;
         timeout?: number;
+        verbose?: boolean;
     }
 }
 

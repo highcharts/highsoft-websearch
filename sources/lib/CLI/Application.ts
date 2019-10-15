@@ -146,9 +146,11 @@ export class Application {
      *
      * */
 
-    private createDirectory (directoryPath: string): Promise<void> {
+    private createDirectory (directoryPath: string, verbose?: boolean): Promise<void> {
 
-        Application.log(`Create ${directoryPath}`);
+        if (verbose) {
+            Application.log(`Create ${directoryPath}`);
+        }
 
         return new Promise((resolve, reject) => {
             FS.mkdir(
@@ -166,7 +168,7 @@ export class Application {
         });
     }
 
-    private downloadAll (depth: number): Promise<void> {
+    private downloadAll (depth: number, verbose?: boolean): Promise<void> {
 
         if (depth === 0) {
             return Promise.resolve();
@@ -188,6 +190,9 @@ export class Application {
                 !includeForeignDomains &&
                 !loadURL.startsWith(baseURLString)
             ) {
+                if (verbose) {
+                    Application.log(`FOREIGN DOMAIN: ${loadURL}`);
+                }
                 continue;
             }
 
@@ -201,25 +206,29 @@ export class Application {
                         .delay(++delayFactor * delay)
                         .then(() => {
                             loadTasks.set(loadURL, true);
-                            return this.downloadURL(new URL(loadURL), timeout, depth);
+                            return this.downloadURL(new URL(loadURL), timeout, depth, verbose);
                         })
                 );
             }
             catch (error) {
-                // silent fail
+                if (verbose) {
+                    Application.log(error);
+                }
             }
         }
 
         return Promise
             .all(downloadPromises)
             .then(() => {
-                return this.downloadAll(--depth);
+                return this.downloadAll(--depth, verbose);
             });
     }
 
-    private downloadURL (url: URL, timeout: number, depth: number): Promise<void> {
+    private downloadURL (url: URL, timeout: number, depth: number, verbose?: boolean): Promise<void> {
 
-        Application.log(`Download ${url}`);
+        if (verbose) {
+            Application.log(`Download ${url}`);
+        }
 
         return CLI.Download
             .fromURL(url, timeout)
@@ -237,18 +246,18 @@ export class Application {
             });
     }
 
-    private loadAll (depth: number): Promise<void> {
+    private loadAll (depth: number, verbose?: boolean): Promise<void> {
 
         this._loadTasks.set(this._baseURL.toString(), false);
 
         if (typeof this._options.sideload === 'string') {
-            return this.sideloadAll(this._options.sideload, depth);
+            return this.sideloadAll(this._options.sideload, depth, verbose);
         }
 
-        return this.downloadAll(depth);
+        return this.downloadAll(depth, verbose);
     }
 
-    private prepareKeywordURLSets (directoryPath: string): Promise<void> {
+    private loadKeywordURLSets (directoryPath: string, verbose?: boolean): Promise<void> {
         return new Promise((resolve) => {
 
             if (
@@ -268,6 +277,7 @@ export class Application {
             for (let directoryEntry of directoryEntries) {
 
                 if (!directoryEntry.endsWith('.txt')) {
+                    Application.log(`LOAD FAILED: ${Path.join(directoryPath, directoryEntry)}`);
                     continue;
                 }
 
@@ -277,7 +287,9 @@ export class Application {
                     keywordURLSets.set(keyword, keywordURLSet);
                 }
                 catch (error) {
-                    // silent fail
+                    if (verbose) {
+                        Application.log(error);
+                    }
                 }
             }
 
@@ -289,20 +301,22 @@ export class Application {
 
         const depthOptions = this._options.depth;
         const outOptions = this._options.out;
+        const verbose = this._options.verbose;
 
         return Promise
             .resolve()
-            .then(() => this.prepareKeywordURLSets(outOptions))
-            .then(() => this.loadAll(depthOptions))
-            .then(() => this.saveAll(outOptions))
+            .then(() => Application.log('Processing...'))
+            .then(() => this.loadKeywordURLSets(outOptions, verbose))
+            .then(() => this.loadAll(depthOptions, verbose))
+            .then(() => this.saveAll(outOptions, verbose))
             .then(() => 'Done.')
             .then(Application.success)
             .catch(Application.error);
     }
 
-    private saveAll (directoryPath: string): Promise<Array<void>> {
+    private saveAll (directoryPath: string, verbose?: boolean): Promise<Array<void>> {
         return this
-            .createDirectory(directoryPath)
+            .createDirectory(directoryPath, verbose)
             .then(() => {
 
                 const savePromises: Array<Promise<void>> = [];
@@ -311,18 +325,20 @@ export class Application {
                 let keywordURLSet: L.KeywordURLSet;
 
                 for (keywordURLSet of keywordURLSets) {
-                    savePromises.push(this.saveFile(directoryPath, keywordURLSet));
+                    savePromises.push(this.saveFile(directoryPath, keywordURLSet, verbose));
                 }
 
                 return Promise.all(savePromises);
             });
     }
 
-    private saveFile (directoryPath: string, keywordURLSet: L.KeywordURLSet): Promise<void> {
+    private saveFile (directoryPath: string, keywordURLSet: L.KeywordURLSet, verbose?: boolean): Promise<void> {
 
         const filePath = Path.join(directoryPath, (keywordURLSet.keyword + '.txt'));
 
-        // Application.log(`Save ${filePath}...`);
+        if (verbose) {
+            Application.log(`Save ${filePath}...`);
+        }
 
         return new Promise((resolve, reject) => {
             FS.writeFile(
@@ -340,7 +356,7 @@ export class Application {
         });
     }
 
-    private sideloadAll (localPath: string, depth: number): Promise<void> {
+    private sideloadAll (localPath: string, depth: number, verbose?: boolean): Promise<void> {
 
         if (depth === 0) {
             return Promise.resolve();
@@ -366,30 +382,34 @@ export class Application {
             try {
                 loadTasks.set(loadURL, true);
                 loadPath = Path.join(localPath, loadURL.substr(baseURLString.length));
-                sideloadPromises.push(this.sideloadPath(baseURL, loadPath, depth));
+                sideloadPromises.push(this.sideloadPath(baseURL, loadPath, depth, verbose));
             }
             catch (error) {
-                // silent fail
+                if (verbose) {
+                    Application.log(error);
+                }
             }
         }
 
         return Promise
             .all(sideloadPromises)
             .then(() => {
-                return this.sideloadAll(localPath, --depth);
+                return this.sideloadAll(localPath, --depth, verbose);
             });
     }
 
-    private sideloadPath(baseURL: URL, path: string, depth: number): Promise<void> {
+    private sideloadPath(baseURL: URL, path: string, depth: number, verbose?: boolean): Promise<void> {
 
-        Application.log(`Sideload ${path}`);
+        if (verbose) {
+            Application.log(`Sideload ${path}`);
+        }
 
         return CLI.Sideload
             .fromPath(baseURL, path)
             .then((sideload: CLI.Sideload): void => {
 
                 if (sideload.hasFailed) {
-                    Application.log(`FAILED: ${path}`);
+                    Application.log(`SIDELOAD FAILED: ${path}`);
                     return;
                 }
 

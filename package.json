@@ -47,6 +47,7 @@
         "test": "npm run tests",
         "tests": "npm run build && ./bin/highsoft-search --depth 2 --out tests_results --sideload tests/ http://127.0.0.1:8000/ && npm run tests-results",
         "tests-online": "npm run build && ./bin/highsoft-search --depth 2 --out tests_results https://api.highcharts.com/class-reference/ && npm run tests-results",
-        "tests-results": "node ./tests_results.js"
+        "tests-results": "node ./tests_results.js",
+        "watch": "npm run build -- --watch"
     }
 }
