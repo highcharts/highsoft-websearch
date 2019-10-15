@@ -15,6 +15,7 @@
     },
     "devDependencies": {
         "@types/node": "^12.7.11",
+        "husky": "^3.0.9",
         "typescript": "^3.6.4"
     },
     "engines": {
@@ -28,6 +29,10 @@
         "LICENSE.md",
         "README.md"
     ],
+    "husky": {
+        "pre-commit": "npm run build",
+        "pre-push": "npm test"
+    },
     "keywords": [
         "Highsoft",
         "search"
