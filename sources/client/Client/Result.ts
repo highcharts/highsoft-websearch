@@ -15,6 +15,6 @@ namespace HighsoftWebsearch {
      * The search result in structure of a keyword item with title and URL.
      */
     export interface ResultFormatter {
-        (search: Search, item?: KeywordItem): (HTMLElement|undefined);
+        (search: Controller, item?: KeywordItem): (HTMLElement|undefined);
     }
 }

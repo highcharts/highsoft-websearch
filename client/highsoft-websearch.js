@@ -127,9 +127,247 @@ var HighsoftWebsearch;
         if (!(buttonElement instanceof HTMLElement)) {
             throw new Error('Button element not found.');
         }
-        return new HighsoftWebsearch.Search(basePath, inputElement, outputElement, buttonElement);
+        return new HighsoftWebsearch.Controller(new HighsoftWebsearch.Search(basePath), inputElement, outputElement, buttonElement);
     }
     HighsoftWebsearch.connect = connect;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
+    var Controller = (function () {
+        function Controller(search, inputElement, outputElement, buttonElement) {
+            this._buttonElement = buttonElement;
+            this._inputElement = inputElement;
+            this._outputElement = outputElement;
+            this._pendingPreviews = [];
+            this._resultRenderer = Controller.defaultResultRenderer;
+            this._search = search;
+            this._timeout = 0;
+            this.addEventListeners();
+        }
+        Controller.defaultResultRenderer = function (controller, item) {
+            var outputElement = controller.outputElement;
+            if (typeof item === 'undefined') {
+                outputElement.style.display = 'none';
+                return;
+            }
+            var linkElement = document.createElement('a');
+            var headElement;
+            var previewElement;
+            var resultElement;
+            switch (outputElement.tagName.toLowerCase()) {
+                default:
+                    headElement = document.createElement('h3');
+                    previewElement = document.createElement('p');
+                    resultElement = document.createElement('div');
+                    resultElement.appendChild(headElement);
+                    resultElement.appendChild(previewElement);
+                    outputElement.appendChild(resultElement);
+                    break;
+                case 'dl':
+                    headElement = document.createElement('dt');
+                    previewElement = document.createElement('dd');
+                    resultElement = headElement;
+                    outputElement.appendChild(headElement);
+                    outputElement.appendChild(previewElement);
+                    break;
+                case 'ol':
+                case 'ul':
+                    headElement = document.createElement('h3');
+                    previewElement = document.createElement('p');
+                    resultElement = document.createElement('li');
+                    resultElement.appendChild(headElement);
+                    resultElement.appendChild(previewElement);
+                    outputElement.appendChild(resultElement);
+                    break;
+                case 'table':
+                    headElement = document.createElement('th');
+                    previewElement = document.createElement('td');
+                    resultElement = document.createElement('tr');
+                    resultElement.appendChild(headElement);
+                    resultElement.appendChild(previewElement);
+                    outputElement.appendChild(resultElement);
+                    break;
+            }
+            linkElement.setAttribute('href', item.url);
+            linkElement.setAttribute('title', "Relevance: " + item.weight + "%");
+            linkElement.innerText = item.title;
+            headElement.appendChild(linkElement);
+            resultElement.setAttribute('class', 'SearchResult');
+            outputElement.style.display = '';
+            return previewElement;
+        };
+        Object.defineProperty(Controller.prototype, "buttonElement", {
+            get: function () {
+                return this._buttonElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "inputElement", {
+            get: function () {
+                return this._inputElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "outputElement", {
+            get: function () {
+                return this._outputElement;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "resultRenderer", {
+            get: function () {
+                return this._resultRenderer;
+            },
+            set: function (value) {
+                this._resultRenderer = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Controller.prototype, "search", {
+            get: function () {
+                return this._search;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Controller.prototype.onButtonClick = function (evt) {
+            clearTimeout(this._timeout);
+            if (evt.target !== this._buttonElement) {
+                return;
+            }
+            this.onTimeout();
+        };
+        Controller.prototype.onInputChange = function (evt) {
+            var inputElement = this._inputElement;
+            if (evt.target !== inputElement) {
+                return;
+            }
+            var words = HighsoftWebsearch.KeywordFilter.getWords(this._inputElement.value);
+            if (words.length === 0 || words[0].length < 2) {
+                this.hideResults();
+                return;
+            }
+        };
+        Controller.prototype.onInputKeyDown = function (evt) {
+            clearTimeout(this._timeout);
+            var inputElement = this._inputElement;
+            if (evt.target !== inputElement) {
+                return;
+            }
+            if (evt.key === 'Enter') {
+                this.onButtonClick(evt);
+                return;
+            }
+            this._timeout = setTimeout(this.onTimeout.bind(this), 500);
+        };
+        Controller.prototype.onScroll = function () {
+            var pendingPreviews = this._pendingPreviews;
+            var scrollBorder = (window.innerHeight + window.scrollY + 16);
+            var pendingPreview;
+            var _loop_1 = function () {
+                var _a = __read(pendingPreview, 2), previewElement = _a[0], previewItem = _a[1];
+                if (previewElement.offsetTop > scrollBorder) {
+                    pendingPreviews.unshift(pendingPreview);
+                    return "break";
+                }
+                HighsoftWebsearch.Search
+                    .preview(previewItem, (this_1._search.terms || []))
+                    .then(function (html) {
+                    previewElement.innerHTML = html;
+                })
+                    .catch(function () { return undefined; });
+            };
+            var this_1 = this;
+            while (typeof (pendingPreview = pendingPreviews.shift()) !== 'undefined') {
+                var state_1 = _loop_1();
+                if (state_1 === "break")
+                    break;
+            }
+        };
+        Controller.prototype.onTimeout = function () {
+            var _this = this;
+            var query = this._inputElement.value;
+            var words = HighsoftWebsearch.KeywordFilter.getWords(query);
+            if (words.length === 0 || words[0].length < 2) {
+                this.hideResults();
+                return;
+            }
+            this._search
+                .find(query)
+                .then(function (items) {
+                if (items.length === 0) {
+                    _this.hideResults();
+                }
+                else {
+                    _this.showResults(items);
+                }
+            })
+                .catch(function () { return _this.hideResults; });
+        };
+        Controller.prototype.addEventListeners = function () {
+            this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
+            this.inputElement.addEventListener('change', this.onInputChange.bind(this));
+            this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
+            if (this.outputElement.ownerDocument) {
+                this.outputElement.ownerDocument.addEventListener('scroll', this.onScroll.bind(this));
+            }
+        };
+        Controller.prototype.hideResults = function () {
+            this._pendingPreviews.length = 0;
+            this._resultRenderer.call(this, this);
+        };
+        Controller.prototype.showResults = function (keywordItems) {
+            var e_2, _a;
+            var pendingPreviews = this._pendingPreviews;
+            this._outputElement.innerHTML = '';
+            var previewElement;
+            try {
+                for (var keywordItems_1 = __values(keywordItems), keywordItems_1_1 = keywordItems_1.next(); !keywordItems_1_1.done; keywordItems_1_1 = keywordItems_1.next()) {
+                    var keywordItem = keywordItems_1_1.value;
+                    previewElement = this._resultRenderer.call(this, this, keywordItem);
+                    if (typeof previewElement === 'undefined') {
+                        continue;
+                    }
+                    pendingPreviews.push([previewElement, keywordItem]);
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (keywordItems_1_1 && !keywordItems_1_1.done && (_a = keywordItems_1.return)) _a.call(keywordItems_1);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            this.onScroll();
+        };
+        return Controller;
+    }());
+    HighsoftWebsearch.Controller = Controller;
 })(HighsoftWebsearch || (HighsoftWebsearch = {}));
 /*!*
  *
@@ -214,101 +452,24 @@ var HighsoftWebsearch;
  *  Copyright (C) Highsoft AS
  *
  * */
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
 var HighsoftWebsearch;
 (function (HighsoftWebsearch) {
     var Search = (function () {
-        function Search(basePath, inputElement, outputElement, buttonElement) {
+        function Search(basePath) {
             this._basePath = basePath;
-            this._buttonElement = buttonElement;
-            this._inputElement = inputElement;
-            this._outputElement = outputElement;
-            this._pendingPreviews = [];
-            this._resultRenderer = Search.defaultResultRenderer;
-            this._timeout = 0;
-            this.addEventListeners();
         }
-        Search.defaultResultRenderer = function (search, item) {
-            var outputElement = search.outputElement;
-            if (typeof item === 'undefined') {
-                outputElement.style.display = 'none';
-                return;
-            }
-            var linkElement = document.createElement('a');
-            var headElement;
-            var previewElement;
-            var resultElement;
-            switch (outputElement.tagName.toLowerCase()) {
-                default:
-                    headElement = document.createElement('h3');
-                    previewElement = document.createElement('p');
-                    resultElement = document.createElement('div');
-                    resultElement.appendChild(headElement);
-                    resultElement.appendChild(previewElement);
-                    outputElement.appendChild(resultElement);
-                    break;
-                case 'dl':
-                    headElement = document.createElement('dt');
-                    previewElement = document.createElement('dd');
-                    resultElement = headElement;
-                    outputElement.appendChild(headElement);
-                    outputElement.appendChild(previewElement);
-                    break;
-                case 'ol':
-                case 'ul':
-                    headElement = document.createElement('h3');
-                    previewElement = document.createElement('p');
-                    resultElement = document.createElement('li');
-                    resultElement.appendChild(headElement);
-                    resultElement.appendChild(previewElement);
-                    outputElement.appendChild(resultElement);
-                    break;
-                case 'table':
-                    headElement = document.createElement('th');
-                    previewElement = document.createElement('td');
-                    resultElement = document.createElement('tr');
-                    resultElement.appendChild(headElement);
-                    resultElement.appendChild(previewElement);
-                    outputElement.appendChild(resultElement);
-                    break;
-            }
-            linkElement.setAttribute('href', item.url);
-            linkElement.setAttribute('title', "Relevance: " + item.weight + "%");
-            linkElement.innerText = item.title;
-            headElement.appendChild(linkElement);
-            resultElement.setAttribute('class', 'SearchResult');
-            outputElement.style.display = '';
-            return previewElement;
-        };
-        Search.preview = function (search, item) {
-            var searchTerms = search.terms;
-            if (typeof searchTerms === 'undefined') {
+        Search.preview = function (item, searchTerms) {
+            if (searchTerms.length === 0) {
                 Promise.resolve('');
             }
             return HighsoftWebsearch.Download
                 .fromURL(item.url)
                 .then(function (download) {
-                var e_2, _a;
+                var e_3, _a;
                 var downloadDocument = document.createElement('html');
                 downloadDocument.innerHTML = download.content;
                 var downloadBody = downloadDocument.getElementsByTagName('body')[0];
-                if (typeof downloadBody === 'undefined' ||
-                    typeof searchTerms === 'undefined') {
+                if (typeof downloadBody === 'undefined') {
                     return '';
                 }
                 var preview = HighsoftWebsearch.KeywordFilter.getWords(downloadBody.innerText);
@@ -318,19 +479,19 @@ var HighsoftWebsearch;
                 var previewEnd = 0;
                 try {
                     for (var searchTerms_1 = __values(searchTerms), searchTerms_1_1 = searchTerms_1.next(); !searchTerms_1_1.done; searchTerms_1_1 = searchTerms_1.next()) {
-                        var searchTerm = searchTerms_1_1.value;
-                        previewIndex = previewLowerCase.indexOf(searchTerm.toLowerCase());
+                        var queryTerm = searchTerms_1_1.value;
+                        previewIndex = previewLowerCase.indexOf(queryTerm.toLowerCase());
                         if (previewIndex >= 0) {
                             break;
                         }
                     }
                 }
-                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                catch (e_3_1) { e_3 = { error: e_3_1 }; }
                 finally {
                     try {
                         if (searchTerms_1_1 && !searchTerms_1_1.done && (_a = searchTerms_1.return)) _a.call(searchTerms_1);
                     }
-                    finally { if (e_2) throw e_2.error; }
+                    finally { if (e_3) throw e_3.error; }
                 }
                 if (previewIndex < 10) {
                     previewEnd = 21;
@@ -355,40 +516,9 @@ var HighsoftWebsearch;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Search.prototype, "buttonElement", {
-            get: function () {
-                return this._buttonElement;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Search.prototype, "inputElement", {
-            get: function () {
-                return this._inputElement;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Search.prototype, "outputElement", {
-            get: function () {
-                return this._outputElement;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Search.prototype, "query", {
             get: function () {
                 return this._query;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Search.prototype, "resultRenderer", {
-            get: function () {
-                return this._resultRenderer;
-            },
-            set: function (value) {
-                this._resultRenderer = value;
             },
             enumerable: true,
             configurable: true
@@ -400,90 +530,8 @@ var HighsoftWebsearch;
             enumerable: true,
             configurable: true
         });
-        Search.prototype.onButtonClick = function (evt) {
-            clearTimeout(this._timeout);
-            if (evt.target !== this._buttonElement) {
-                return;
-            }
-            this.onTimeout();
-        };
-        Search.prototype.onInputChange = function (evt) {
-            var inputElement = this._inputElement;
-            if (evt.target !== inputElement) {
-                return;
-            }
-            var words = HighsoftWebsearch.KeywordFilter.getWords(this._inputElement.value);
-            if (words.length === 0 || words[0].length < 2) {
-                this.hideResults();
-                return;
-            }
-        };
-        Search.prototype.onInputKeyDown = function (evt) {
-            clearTimeout(this._timeout);
-            var inputElement = this._inputElement;
-            if (evt.target !== inputElement) {
-                return;
-            }
-            if (evt.key === 'Enter') {
-                this.onButtonClick(evt);
-                return;
-            }
-            this._timeout = setTimeout(this.onTimeout.bind(this), 500);
-        };
-        Search.prototype.onScroll = function () {
-            var pendingPreviews = this._pendingPreviews;
-            var scrollBorder = (window.innerHeight + window.scrollY + 16);
-            var pendingPreview;
-            var _loop_1 = function () {
-                var _a = __read(pendingPreview, 2), previewElement = _a[0], previewItem = _a[1];
-                if (previewElement.offsetTop > scrollBorder) {
-                    pendingPreviews.unshift(pendingPreview);
-                    return "break";
-                }
-                Search
-                    .preview(this_1, previewItem)
-                    .then(function (html) {
-                    previewElement.innerHTML = html;
-                })
-                    .catch(function () { return undefined; });
-            };
-            var this_1 = this;
-            while (typeof (pendingPreview = pendingPreviews.shift()) !== 'undefined') {
-                var state_1 = _loop_1();
-                if (state_1 === "break")
-                    break;
-            }
-        };
-        Search.prototype.onTimeout = function () {
-            var _this = this;
-            var query = this._inputElement.value;
-            var words = HighsoftWebsearch.KeywordFilter.getWords(query);
-            if (words.length === 0 || words[0].length < 2) {
-                this.hideResults();
-                return;
-            }
-            this
-                .find(query)
-                .then(function (items) {
-                if (items.length === 0) {
-                    _this.hideResults();
-                }
-                else {
-                    _this.showResults(items);
-                }
-            })
-                .catch(function () { return _this.hideResults; });
-        };
-        Search.prototype.addEventListeners = function () {
-            this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
-            this.inputElement.addEventListener('change', this.onInputChange.bind(this));
-            this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
-            if (this.outputElement.ownerDocument) {
-                this.outputElement.ownerDocument.addEventListener('scroll', this.onScroll.bind(this));
-            }
-        };
         Search.prototype.consolidate = function (keywordFiles) {
-            var e_3, _a, e_4, _b;
+            var e_4, _a, e_5, _b;
             var consolidatedItems = new HighsoftWebsearch.Dictionary();
             var keywordFile;
             var keywordItem;
@@ -493,39 +541,39 @@ var HighsoftWebsearch;
                     keywordFile = keywordFiles_1_1.value;
                     keywordItems = keywordFile.items.values;
                     try {
-                        for (var keywordItems_1 = (e_4 = void 0, __values(keywordItems)), keywordItems_1_1 = keywordItems_1.next(); !keywordItems_1_1.done; keywordItems_1_1 = keywordItems_1.next()) {
-                            keywordItem = keywordItems_1_1.value;
+                        for (var keywordItems_2 = (e_5 = void 0, __values(keywordItems)), keywordItems_2_1 = keywordItems_2.next(); !keywordItems_2_1.done; keywordItems_2_1 = keywordItems_2.next()) {
+                            keywordItem = keywordItems_2_1.value;
                             if (!consolidatedItems.contains(keywordItem.url)) {
                                 consolidatedItems.set(keywordItem.url, keywordItem);
                             }
                         }
                     }
-                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
                     finally {
                         try {
-                            if (keywordItems_1_1 && !keywordItems_1_1.done && (_b = keywordItems_1.return)) _b.call(keywordItems_1);
+                            if (keywordItems_2_1 && !keywordItems_2_1.done && (_b = keywordItems_2.return)) _b.call(keywordItems_2);
                         }
-                        finally { if (e_4) throw e_4.error; }
+                        finally { if (e_5) throw e_5.error; }
                     }
                 }
             }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            catch (e_4_1) { e_4 = { error: e_4_1 }; }
             finally {
                 try {
                     if (keywordFiles_1_1 && !keywordFiles_1_1.done && (_a = keywordFiles_1.return)) _a.call(keywordFiles_1);
                 }
-                finally { if (e_3) throw e_3.error; }
+                finally { if (e_4) throw e_4.error; }
             }
             return consolidatedItems.values.sort(HighsoftWebsearch.KeywordURLSet.sorter);
         };
-        Search.prototype.download = function (term) {
+        Search.prototype.download = function (searchTerm) {
             return HighsoftWebsearch.Download
-                .fromURL(this.basePath + term + '.txt')
-                .then(function (download) { return new HighsoftWebsearch.KeywordURLSet(term, download.content); })
-                .catch(function () { return new HighsoftWebsearch.KeywordURLSet(term); });
+                .fromURL(this.basePath + searchTerm + '.txt')
+                .then(function (download) { return new HighsoftWebsearch.KeywordURLSet(searchTerm, download.content); })
+                .catch(function () { return new HighsoftWebsearch.KeywordURLSet(searchTerm); });
         };
         Search.prototype.find = function (query) {
-            var e_5, _a;
+            var e_6, _a;
             this._query = query;
             var downloadPromises = [];
             var terms = this._terms = HighsoftWebsearch.KeywordFilter.getWords(query);
@@ -536,45 +584,17 @@ var HighsoftWebsearch;
                     downloadPromises.push(this.download(term));
                 }
             }
-            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
             finally {
                 try {
                     if (terms_1_1 && !terms_1_1.done && (_a = terms_1.return)) _a.call(terms_1);
                 }
-                finally { if (e_5) throw e_5.error; }
+                finally { if (e_6) throw e_6.error; }
             }
             return Promise
                 .all(downloadPromises)
                 .then(this.consolidate)
                 .catch(function () { return []; });
-        };
-        Search.prototype.hideResults = function () {
-            this._pendingPreviews.length = 0;
-            this._resultRenderer.call(this, this);
-        };
-        Search.prototype.showResults = function (keywordItems) {
-            var e_6, _a;
-            var pendingPreviews = this._pendingPreviews;
-            this._outputElement.innerHTML = '';
-            var previewElement;
-            try {
-                for (var keywordItems_2 = __values(keywordItems), keywordItems_2_1 = keywordItems_2.next(); !keywordItems_2_1.done; keywordItems_2_1 = keywordItems_2.next()) {
-                    var keywordItem = keywordItems_2_1.value;
-                    previewElement = this._resultRenderer.call(this, this, keywordItem);
-                    if (typeof previewElement === 'undefined') {
-                        continue;
-                    }
-                    pendingPreviews.push([previewElement, keywordItem]);
-                }
-            }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
-            finally {
-                try {
-                    if (keywordItems_2_1 && !keywordItems_2_1.done && (_a = keywordItems_2.return)) _a.call(keywordItems_2);
-                }
-                finally { if (e_6) throw e_6.error; }
-            }
-            this.onScroll();
         };
         return Search;
     }());

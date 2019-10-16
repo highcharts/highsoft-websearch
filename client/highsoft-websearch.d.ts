@@ -21,7 +21,38 @@ declare namespace HighsoftWebsearch {
  *
  * */
 declare namespace HighsoftWebsearch {
-    function connect(basePath: string, inputElement: (string | HTMLInputElement), buttonElement: (string | HTMLElement), outputElement: (string | HTMLElement)): Search;
+    function connect(basePath: string, inputElement: (string | HTMLInputElement), buttonElement: (string | HTMLElement), outputElement: (string | HTMLElement)): Controller;
+}
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+declare namespace HighsoftWebsearch {
+    class Controller {
+        static defaultResultRenderer(controller: Controller, item?: KeywordItem): (HTMLElement | undefined);
+        constructor(search: Search, inputElement: HTMLInputElement, outputElement: HTMLElement, buttonElement: HTMLElement);
+        private _buttonElement;
+        private _inputElement;
+        private _outputElement;
+        private _pendingPreviews;
+        private _resultRenderer;
+        private _search;
+        private _timeout;
+        readonly buttonElement: HTMLElement;
+        readonly inputElement: HTMLInputElement;
+        readonly outputElement: HTMLElement;
+        resultRenderer: ResultFormatter;
+        readonly search: Search;
+        private onButtonClick;
+        private onInputChange;
+        private onInputKeyDown;
+        private onScroll;
+        private onTimeout;
+        private addEventListeners;
+        private hideResults;
+        private showResults;
+    }
 }
 /*!*
  *
@@ -49,7 +80,7 @@ declare namespace HighsoftWebsearch {
  * */
 declare namespace HighsoftWebsearch {
     interface ResultFormatter {
-        (search: Search, item?: KeywordItem): (HTMLElement | undefined);
+        (search: Controller, item?: KeywordItem): (HTMLElement | undefined);
     }
 }
 /*!*
@@ -59,36 +90,17 @@ declare namespace HighsoftWebsearch {
  * */
 declare namespace HighsoftWebsearch {
     class Search {
-        static defaultResultRenderer(search: Search, item?: KeywordItem): (HTMLElement | undefined);
-        static preview(search: Search, item: KeywordItem): Promise<string>;
-        constructor(basePath: string, inputElement: HTMLInputElement, outputElement: HTMLElement, buttonElement: HTMLElement);
+        static preview(item: KeywordItem, searchTerms: Array<string>): Promise<string>;
+        constructor(basePath: string);
         private _basePath;
-        private _buttonElement;
-        private _inputElement;
-        private _outputElement;
-        private _pendingPreviews;
         private _query;
-        private _resultRenderer;
         private _terms;
-        private _timeout;
         readonly basePath: string;
-        readonly buttonElement: HTMLElement;
-        readonly inputElement: HTMLInputElement;
-        readonly outputElement: HTMLElement;
         readonly query: (string | undefined);
-        resultRenderer: ResultFormatter;
         readonly terms: (Array<string> | undefined);
-        private onButtonClick;
-        private onInputChange;
-        private onInputKeyDown;
-        private onScroll;
-        private onTimeout;
-        private addEventListeners;
         private consolidate;
-        download(term: string): Promise<KeywordURLSet>;
+        download(searchTerm: string): Promise<KeywordURLSet>;
         find(query: string): Promise<Array<KeywordItem>>;
-        private hideResults;
-        private showResults;
     }
 }
 /*!*

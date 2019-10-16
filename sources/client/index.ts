@@ -13,7 +13,7 @@ namespace HighsoftWebsearch {
         inputElement: (string|HTMLInputElement),
         buttonElement: (string|HTMLElement),
         outputElement: (string|HTMLElement)
-    ): Search {
+    ): Controller {
 
         if (typeof inputElement === 'string') {
             inputElement = ((document.getElementById(inputElement) as HTMLInputElement) || '');
@@ -39,6 +39,11 @@ namespace HighsoftWebsearch {
             throw new Error('Button element not found.');
         }
 
-        return new Search(basePath, inputElement, outputElement, buttonElement);
+        return new Controller(
+            new Search(basePath),
+            inputElement,
+            outputElement,
+            buttonElement
+        );
     }
 }
