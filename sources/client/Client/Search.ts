@@ -350,8 +350,7 @@ namespace HighsoftWebsearch {
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
 
             if (this.outputElement.ownerDocument) {
-                this.outputElement.ownerDocument
-                    .addEventListener('scroll', this.onScroll.bind(this));
+                this.outputElement.ownerDocument.addEventListener('scroll', this.onScroll.bind(this));
             }
         }
 

@@ -47,8 +47,8 @@
         "build": "npm run clean && tsc --build sources/client sources/lib",
         "clean": "rm -rf client lib tests_results",
         "test": "npm run tests",
-        "tests": "npm run build && ./bin/highsoft-websearch --sideload tests/ http://localhost:8000/tests/ && npm run tests-results",
-        "tests-online": "npm run build && ./bin/highsoft-websearch https://api.highcharts.com/class-reference/ && npm run tests-results",
+        "tests": "npm run build && ./bin/highsoft-websearch --sideload tests/ http://localhost:8000/tests/",
+        "tests-online": "npm run build && ./bin/highsoft-websearch https://api.highcharts.com/class-reference/",
         "tests-results": "node ./tests_results.js",
         "watch": "npm run build -- --watch"
     }
