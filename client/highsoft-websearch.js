@@ -331,7 +331,7 @@ var HighsoftWebSearch;
         };
         Controller.prototype.addEventListeners = function () {
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
-            this.inputElement.addEventListener('change', this.onInputChange.bind(this));
+            this.inputElement.addEventListener('input', this.onInputChange.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
             if (this.outputElement.ownerDocument) {
                 this.outputElement.ownerDocument.addEventListener('scroll', this.onScroll.bind(this));
