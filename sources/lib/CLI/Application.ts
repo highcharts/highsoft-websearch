@@ -198,7 +198,7 @@ export class Application {
         });
     }
 
-    private downloadAll (depth: number, verbose?: boolean): Promise<void> {
+    private downloadAll (depth: number, inspectIds: boolean, verbose?: boolean): Promise<void> {
 
         if (depth === 0) {
             return Promise.resolve();
@@ -236,7 +236,7 @@ export class Application {
                         .delay(++delayFactor * delay)
                         .then(() => {
                             loadTasks.set(loadURL, true);
-                            return this.downloadURL(new URL(loadURL), timeout, depth, verbose);
+                            return this.downloadURL(new URL(loadURL), timeout, depth, inspectIds, verbose);
                         })
                 );
             }
@@ -250,11 +250,11 @@ export class Application {
         return Promise
             .all(downloadPromises)
             .then(() => {
-                return this.downloadAll(--depth, verbose);
+                return this.downloadAll(--depth, inspectIds, verbose);
             });
     }
 
-    private downloadURL (url: URL, timeout: number, depth: number, verbose?: boolean): Promise<void> {
+    private downloadURL (url: URL, timeout: number, depth: number, inspectIds: boolean, verbose?: boolean): Promise<void> {
 
         if (verbose) {
             Application.log(`Download ${url}`);
@@ -271,20 +271,21 @@ export class Application {
 
                 download.update(
                     this._keywordURLSets,
-                    (depth > 1 ? this._loadTasks : undefined)
+                    (depth > 1 ? this._loadTasks : undefined),
+                    inspectIds
                 );
             });
     }
 
-    private inspectAll (depth: number, verbose?: boolean): Promise<void> {
+    private inspectAll (depth: number, inspectIds: boolean, verbose?: boolean): Promise<void> {
 
         this._loadTasks.set(this._baseURL.toString(), false);
 
         if (typeof this._options.sideload === 'string') {
-            return this.sideloadAll(this._options.sideload, depth, verbose);
+            return this.sideloadAll(this._options.sideload, depth, inspectIds, verbose);
         }
 
-        return this.downloadAll(depth, verbose);
+        return this.downloadAll(depth, inspectIds, verbose);
     }
 
     private loadKeywordURLSets (directoryPath: string, verbose?: boolean): Promise<void> {
@@ -330,6 +331,7 @@ export class Application {
 
         const copyClient = this._options.copyClient;
         const depth = this._options.depth;
+        const inspectIds = this._options.inspectIds;
         const out = this._options.out;
         const verbose = this._options.verbose;
 
@@ -338,7 +340,7 @@ export class Application {
             .then(() => verbose && Application.log('Initializing...'))
             .then(() => this.loadKeywordURLSets(out, verbose))
             .then(() => Application.log('Inspecting...'))
-            .then(() => this.inspectAll(depth, verbose))
+            .then(() => this.inspectAll(depth, inspectIds, verbose))
             .then(() => verbose && Application.log('Saving...'))
             .then(() => this.saveAll(out, copyClient, verbose))
             .then(() => Application.log('Done.'))
@@ -396,14 +398,13 @@ export class Application {
         });
     }
 
-    private sideloadAll (localPath: string, depth: number, verbose?: boolean): Promise<void> {
+    private sideloadAll (localPath: string, depth: number, inspectIds: boolean, verbose?: boolean): Promise<void> {
 
         if (depth === 0) {
             return Promise.resolve();
         }
 
-        const baseURL = this._baseURL;
-        const baseURLString = baseURL.toString();
+        const baseURLString = this._baseURL.toString();
         const sideloadPromises: Array<Promise<void>> = [];
         const loadTasks = this._loadTasks;
 
@@ -422,7 +423,7 @@ export class Application {
             try {
                 loadTasks.set(loadURL, true);
                 loadPath = Path.join(localPath, loadURL.substr(baseURLString.length));
-                sideloadPromises.push(this.sideloadPath(baseURL, loadPath, depth, verbose));
+                sideloadPromises.push(this.sideloadPath(new URL(loadURL), loadPath, depth, inspectIds, verbose));
             }
             catch (error) {
                 if (verbose) {
@@ -434,18 +435,18 @@ export class Application {
         return Promise
             .all(sideloadPromises)
             .then(() => {
-                return this.sideloadAll(localPath, --depth, verbose);
+                return this.sideloadAll(localPath, --depth, inspectIds, verbose);
             });
     }
 
-    private sideloadPath(baseURL: URL, path: string, depth: number, verbose?: boolean): Promise<void> {
+    private sideloadPath(url: URL, path: string, depth: number, inspectIds: boolean, verbose?: boolean): Promise<void> {
 
         if (verbose) {
             Application.log(`Sideload ${path}`);
         }
 
         return CLI.Sideload
-            .fromPath(baseURL, path)
+            .fromPath(url, path)
             .then((sideload: CLI.Sideload): void => {
 
                 if (sideload.hasFailed) {
@@ -455,7 +456,8 @@ export class Application {
 
                 sideload.update(
                     this._keywordURLSets,
-                    (depth > 1 ? this._loadTasks : undefined)
+                    (depth > 1 ? this._loadTasks : undefined),
+                    inspectIds
                 );
             });
     }

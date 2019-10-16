@@ -29,7 +29,7 @@ export class Sideload extends Load {
      *
      * */
 
-    public static fromPath (baseURL: URL, localPath: string): Promise<Sideload> {
+    public static fromPath (url: URL, localPath: string): Promise<Sideload> {
         return new Promise((resolve, reject) => {
             try {
 
@@ -55,7 +55,7 @@ export class Sideload extends Load {
                     content = FS.readFileSync(filePath).toString();
                 }
 
-                resolve(new Sideload(baseURL, localPath, contentType, content));
+                resolve(new Sideload(url, localPath, contentType, content));
             }
             catch (error) {
                 reject(error);
@@ -69,8 +69,8 @@ export class Sideload extends Load {
      *
      * */
 
-    private constructor (baseURL: URL, localPath: string, contentType: string, content: string) {
-        super(baseURL, contentType, content);
+    private constructor (url: URL, localPath: string, contentType: string, content: string) {
+        super(url, contentType, content);
         this._localPath = localPath;
     }
 

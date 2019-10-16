@@ -20,14 +20,16 @@ Options:
 
 --depth [number]       Set the number of link levels to follow.
 
---help, -h             Prints this help text.
+--help, -h             Print this help text.
+
+--inspectIds           Inspect element IDs for potential hash URLs.
 
 --out [directory]      Set the  directory for keyword files.
 
 --timeout [number]     Set the timeout in milliseconds to wait for server
                        response.
 
---verbose, -v          Prints detailed actions for each URL and keyword file.
+--verbose, -v          Print detailed actions for each URL and keyword file.
 
---version              Prints the version.
+--version              Print the version.
 `;

@@ -3,6 +3,7 @@
     "copyClient": true,
     "delay": 1000,
     "depth": 2,
+    "inspectIds": true,
     "out": "tests_results/",
     "timeout": 60000,
     "verbose": false

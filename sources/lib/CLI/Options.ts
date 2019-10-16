@@ -55,6 +55,9 @@ export class Options {
                 case '--help':
                     options._help = true;
                     continue;
+                case '--inspectIds':
+                    options._inspectIds = true;
+                    continue;
                 case '--out':
                     arg = argv[++index]
                     options._out = arg;
@@ -110,6 +113,10 @@ export class Options {
                         options._depth = optionsJSON.depth;
                     }
 
+                    if (typeof optionsJSON.inspectIds === 'boolean') {
+                        options._inspectIds = optionsJSON.inspectIds;
+                    }
+
                     if (typeof optionsJSON.out === 'string') {
                         options._out = Path.join(Path.dirname(filePath), optionsJSON.out);
                     }
@@ -154,6 +161,7 @@ export class Options {
         this._delay = 1000;
         this._depth = 1;
         this._help = false;
+        this._inspectIds = false;
         this._out = process.cwd();
         this._timeout = 60000;
         this._verbose = false;
@@ -171,6 +179,7 @@ export class Options {
     private _delay: number;
     private _depth: number;
     private _help: boolean;
+    private _inspectIds: boolean;
     private _out: string;
     private _sideload: (string|undefined);
     private _timeout: number;
@@ -196,6 +205,10 @@ export class Options {
 
     public get help (): boolean {
         return this._help;
+    }
+
+    public get inspectIds (): boolean {
+        return this._inspectIds;
     }
 
     public get out (): string {
@@ -234,6 +247,7 @@ export interface OptionsJSON {
     copyClient?: boolean;
     delay?: number;
     depth?: number;
+    inspectIds?: boolean;
     out?: string;
     sideload?: string;
     timeout?: number;

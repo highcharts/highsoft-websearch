@@ -71,7 +71,7 @@ export abstract class Load {
         return inspectors;
     }
 
-    public update (keywordURLSets: L.Dictionary<L.KeywordURLSet>, loadTasks?: L.Dictionary<boolean>): void {
+    public update (keywordURLSets: L.Dictionary<L.KeywordURLSet>, loadTasks?: L.Dictionary<boolean>, inspectIds?: boolean): void {
 
         const inspectors = this.getInspectors();
         const linkAliases: Array<string> = [];
@@ -130,13 +130,16 @@ export abstract class Load {
                 }
 
                 keywordURLSet.addURL(inspector.getKeywordWeight(keyword), url, title);
-                linkAliases.push(...inspector.getLinkAliases(url));
+
+                if (inspectIds) {
+                    linkAliases.push(...inspector.getLinkAliases(url));
+                }
             }
         }
 
         for (linkAlias of linkAliases) {
 
-            inspector = new L.URLInspector(linkAlias);
+            inspector = new L.URLInspector(linkAlias.substr(linkAlias.indexOf('#')));
             keywords = inspector.getKeywords();
 
             for (keyword of keywords) {
