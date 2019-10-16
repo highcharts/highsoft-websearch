@@ -307,7 +307,6 @@ export class Application {
             for (let directoryEntry of directoryEntries) {
 
                 if (!directoryEntry.endsWith('.txt')) {
-                    Application.log(`LOAD FAILED: ${Path.join(directoryPath, directoryEntry)}`);
                     continue;
                 }
 
