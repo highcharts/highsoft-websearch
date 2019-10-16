@@ -8,7 +8,6 @@ import * as CLI from './index';
 import * as FS from 'fs';
 import * as L from '../index';
 import * as Path from 'path';
-import { KeywordURLSet } from '../Keywords';
 
 export class Application {
 
@@ -84,10 +83,10 @@ export class Application {
             return;
         }
 
-        let options = CLI.Options.getOptionsFromFile('highsoft-search.json');
+        let options = CLI.Options.getOptionsFromFile('highsoft-websearch.json');
 
         if (options === null) {
-            Application.error('Options file "highsoft-search.json" is invalid.');
+            Application.error('Options file "highsoft-websearch.json" is invalid.');
             return;
         }
 
@@ -246,7 +245,7 @@ export class Application {
             });
     }
 
-    private loadAll (depth: number, verbose?: boolean): Promise<void> {
+    private inspectAll (depth: number, verbose?: boolean): Promise<void> {
 
         this._loadTasks.set(this._baseURL.toString(), false);
 
@@ -272,7 +271,7 @@ export class Application {
             const keywordURLSets = this._keywordURLSets;
 
             let keyword: (string|undefined);
-            let keywordURLSet: KeywordURLSet;
+            let keywordURLSet: L.KeywordURLSet;
 
             for (let directoryEntry of directoryEntries) {
 
@@ -283,7 +282,7 @@ export class Application {
 
                 try {
                     keyword = Path.basename(directoryEntry, Path.extname(directoryEntry));
-                    keywordURLSet = new KeywordURLSet(keyword, FS.readFileSync(Path.join(directoryPath, directoryEntry)).toString());
+                    keywordURLSet = new L.KeywordURLSet(keyword, FS.readFileSync(Path.join(directoryPath, directoryEntry)).toString());
                     keywordURLSets.set(keyword, keywordURLSet);
                 }
                 catch (error) {
@@ -305,9 +304,11 @@ export class Application {
 
         return Promise
             .resolve()
-            .then(() => Application.log('Processing...'))
+            .then(() => verbose && Application.log('Initializing...'))
             .then(() => this.loadKeywordURLSets(outOptions, verbose))
-            .then(() => this.loadAll(depthOptions, verbose))
+            .then(() => Application.log('Inspecting...'))
+            .then(() => this.inspectAll(depthOptions, verbose))
+            .then(() => verbose && Application.log('Saving...'))
             .then(() => this.saveAll(outOptions, verbose))
             .then(() => 'Done.')
             .then(Application.success)

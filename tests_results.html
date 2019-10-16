@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Highsoft Search test results</title>
-        <script src="client/highsoft-search.js"></script>
+        <title>Highsoft Websearch test results</title>
+        <script src="client/highsoft-websearch.js"></script>
     </head>
     <body>
         <header>
-            <h1>Highsoft Search test results</h1>
+            <h1>Highsoft Websearch test results</h1>
             <div id="search">
                 <input type="search" />
                 <button>Search</button>
@@ -22,7 +22,7 @@
                     return;
                 }
 
-                HighsoftSearch.connect(
+                HighsoftWebsearch.connect(
                     'tests_results/',
                     searchContainer.getElementsByTagName('input')[0],
                     searchContainer.getElementsByTagName('button')[0],

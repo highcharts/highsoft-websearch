@@ -4,8 +4,11 @@
  *
  * */
 
-import * as Keywords from './index';
+import * as L from '../index';
 
+/**
+ * Set of keyword items containg URL, Title, and weight.
+ */
 export class KeywordURLSet {
 
     /* *
@@ -14,22 +17,37 @@ export class KeywordURLSet {
      *
      * */
 
-    private static reducer (items: Record<string, Keywords.KeywordItem>, item: Array<string>): Record<string, Keywords.KeywordItem> {
+    /**
+     * Converts a splitted string to a keyword item dictionary.
+     *
+     * @param items
+     * Initial keyword item dictionary.
+     *
+     * @param item
+     * Splitted string with item values.
+     */
+    private static reducer (items: L.Dictionary<L.KeywordItem>, item: Array<string>): L.Dictionary<L.KeywordItem> {
 
         if (item.length < 3) {
             return items;
         }
 
-        items[item[1]] = {
-            title: item[2],
-            url: item[1],
-            weight: parseInt(item[0])
-        };
+        items.set(
+            item[1],
+            {
+                title: item[2],
+                url: item[1],
+                weight: parseInt(item[0])
+            }
+        );
 
         return items;
     }
 
-    public static sorter (itemA: Keywords.KeywordItem, itemB: Keywords.KeywordItem): number {
+    /**
+     * Descending order of keyword items.
+     */
+    public static sorter (itemA: L.KeywordItem, itemB: L.KeywordItem): number {
         return (itemB.weight - itemA.weight);
     }
 
@@ -39,16 +57,25 @@ export class KeywordURLSet {
      *
      * */
 
+    /**
+     * Creates a set of keyword items containing url, title, and weight.
+     *
+     * @param keyword
+     * Keyword of the set.
+     *
+     * @param content
+     * Optionally initializes the set with tab separated values.
+     */
     public constructor (keyword: string, content?: string) {
 
-        this._items = {};
+        this._items = new L.Dictionary<L.KeywordItem>();
         this._keyword = keyword;
 
         if (typeof content === 'string') {
             this._items = content
                 .split('\n')
                 .map(line => line.split('\t', 3))
-                .reduce(KeywordURLSet.reducer, {});
+                .reduce(KeywordURLSet.reducer, this._items);
         }
     }
 
@@ -58,13 +85,19 @@ export class KeywordURLSet {
      *
      * */
 
-    private _items: Record<string, Keywords.KeywordItem>;
+    private _items: L.Dictionary<L.KeywordItem>;
     private _keyword: string;
 
-    public get items (): Record<string, Keywords.KeywordItem> {
+    /**
+     * Returns the dictionary with all keyword items accessible via URL.
+     */
+    public get items (): L.Dictionary<L.KeywordItem> {
         return this._items;
     }
 
+    /**
+     * Return the keyword of the set.
+     */
     public get keyword (): string {
         return this._keyword;
     }
@@ -75,33 +108,40 @@ export class KeywordURLSet {
      *
      * */
 
+    /**
+     * Adds or replaces a URL in the set.
+     *
+     * @param weight
+     * Weight of the URL.
+     *
+     * @param url
+     * URL to add.
+     *
+     * @param title
+     * Title of the URL content.
+     */
     public addURL (weight: number, url: string, title: string) {
-
-        const items = this._items;
-
-        if (
-            typeof items[url] === 'undefined' ||
-            items[url].weight < weight
-        ) {
-            items[url] = {
-                title,
-                url,
-                weight
-            };
-        }
+        this._items.set(url, { title, url, weight});
     }
 
+    /**
+     * Return true, if the set contains the given URL.
+     *
+     * @param
+     * URL to find in the set.
+     */
     public containsURL (url: string): boolean {
-        return (typeof this._items[url] !== 'undefined');
+        return this._items.contains(url);
     }
 
+    /**
+     * Returns a string of tab separated values for storage purpose.
+     */
     public toString (): string {
 
         const items = this._items;
 
-        return Object
-            .keys(items)
-            .map(key => items[key])
+        return items.values
             .sort(KeywordURLSet.sorter)
             .map(item => (item.weight + '\t' + item.url + '\t' + item.title))
             .join('\n');

@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftSearch {
+namespace HighsoftWebsearch {
     /**
      * Represents a search result in a keyword file.
      */

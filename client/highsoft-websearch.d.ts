@@ -3,7 +3,24 @@
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
+    class Dictionary<T> {
+        constructor(...dictionaries: Array<Dictionary<T>>);
+        private _keys;
+        private _values;
+        readonly keys: Array<string>;
+        readonly values: Array<T>;
+        contains(key: string): boolean;
+        get(key: string): (T | undefined);
+        set(key: string, value?: T): void;
+    }
+}
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+declare namespace HighsoftWebsearch {
     function connect(basePath: string, inputElement: (string | HTMLInputElement), buttonElement: (string | HTMLElement), outputElement: (string | HTMLElement)): Search;
 }
 /*!*
@@ -11,7 +28,7 @@ declare namespace HighsoftSearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
     class Download {
         static fromURL(url: string, timeout?: number): Promise<Download>;
         private constructor();
@@ -30,7 +47,7 @@ declare namespace HighsoftSearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
     interface ResultFormatter {
         (search: Search, item?: KeywordItem): (HTMLElement | undefined);
     }
@@ -40,9 +57,9 @@ declare namespace HighsoftSearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
     class Search {
-        private static defaultResultRenderer;
+        static defaultResultRenderer(search: Search, item?: KeywordItem): (HTMLElement | undefined);
         static preview(search: Search, item: KeywordItem): Promise<string>;
         constructor(basePath: string, inputElement: HTMLInputElement, outputElement: HTMLElement, buttonElement: HTMLElement);
         private _basePath;
@@ -78,7 +95,7 @@ declare namespace HighsoftSearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
     class KeywordFilter {
         static commonFilter(keyword: string): boolean;
         static getWords(content: string): Array<string>;
@@ -90,7 +107,7 @@ declare namespace HighsoftSearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
     interface KeywordItem {
         title: string;
         weight: number;
@@ -102,16 +119,16 @@ declare namespace HighsoftSearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftSearch {
+declare namespace HighsoftWebsearch {
     class KeywordURLSet {
         private static reducer;
         static sorter(itemA: KeywordItem, itemB: KeywordItem): number;
         constructor(keyword: string, content?: string);
         private _items;
         private _keyword;
-        readonly items: Record<string, KeywordItem>;
+        readonly items: Dictionary<KeywordItem>;
         readonly keyword: string;
-        addURL(url: string, weight: number, title: string): void;
+        addURL(weight: number, url: string, title: string): void;
         containsURL(url: string): boolean;
         toString(): string;
     }

@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftSearch {
+namespace HighsoftWebsearch {
     export class Search {
 
         /* *
@@ -24,7 +24,7 @@ namespace HighsoftSearch {
          * @param item
          * The search result in structure of a keyword item with title and URL.
          */
-        private static defaultResultRenderer (search: Search, item?: KeywordItem): (HTMLElement|undefined) {
+        public static defaultResultRenderer (search: Search, item?: KeywordItem): (HTMLElement|undefined) {
 
             const outputElement = search.outputElement;
 
@@ -340,30 +340,24 @@ namespace HighsoftSearch {
 
         private consolidate (keywordFiles: Array<KeywordURLSet>): Array<KeywordItem> {
 
-            const consolidatedItems: Record<string, KeywordItem> = {};
+            const consolidatedItems: Dictionary<KeywordItem> = new Dictionary<KeywordItem>();
 
             let keywordFile: KeywordURLSet;
-            let keywordItems: Record<string, KeywordItem>;
-            let keywordItemURL: string;
-            let keywordItemURLs: Array<string>;
+            let keywordItem: KeywordItem;
+            let keywordItems: Array<KeywordItem>;
 
             for (keywordFile of keywordFiles) {
 
-                keywordItems = keywordFile.items;
-                keywordItemURLs = Object.keys(keywordItems);
+                keywordItems = keywordFile.items.values;
 
-                for (keywordItemURL of keywordItemURLs) {
-                    consolidatedItems[keywordItemURL] = (
-                        consolidatedItems[keywordItemURL] ||
-                        keywordItems[keywordItemURL]
-                    );
+                for (keywordItem of keywordItems) {
+                    if (!consolidatedItems.contains(keywordItem.url)) {
+                        consolidatedItems.set(keywordItem.url, keywordItem);
+                    }
                 }
             }
 
-            return Object
-                .keys(consolidatedItems)
-                .map(keywordItemURL => consolidatedItems[keywordItemURL])
-                .sort(KeywordURLSet.sorter);
+            return consolidatedItems.values.sort(KeywordURLSet.sorter);
         }
 
         public download (term: string): Promise<KeywordURLSet> {
@@ -393,6 +387,7 @@ namespace HighsoftSearch {
         }
 
         private hideResults (): void {
+            this._pendingPreviews.length = 0;
             this._resultRenderer.call(this, this);
         }
 

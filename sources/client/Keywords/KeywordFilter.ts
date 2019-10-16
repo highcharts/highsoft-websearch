@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftSearch {
+namespace HighsoftWebsearch {
 
     /**
      * Contains common words, that are not useful as search terms.

@@ -2,5 +2,6 @@
     "allowForeignDomains": false,
     "delay": 1000,
     "depth": 1,
-    "timeout": 60000
+    "timeout": 60000,
+    "verbose": false
 }

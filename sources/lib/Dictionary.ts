@@ -81,6 +81,16 @@ export class Dictionary<T> {
      * */
 
     /**
+     * Returns true, if the given key is in the dictionary instance.
+     *
+     * @param key
+     * Key to find in the dictionary instance.
+     */
+    public contains (key: string): boolean {
+        return (this._keys.indexOf(key) !== -1);
+    }
+
+    /**
      * Returns the value for a given key, or `undefined` if not found.
      *
      * @param key

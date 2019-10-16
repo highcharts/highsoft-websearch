@@ -10,9 +10,24 @@ const FS = require('fs');
 const HTTP = require('http');
 const ServerPath = require('path');
 
-const configuration = {
+const CONFIGURATION = {
     baseDirectory: process.cwd(),
     serverPort: 8000
+};
+
+const CONTENT_TYPES = {
+    '.bin': 'application/octet-stream',
+    '.css': 'text/css',
+    '.gif': 'image/gif',
+    '.htm': 'text/html',
+    '.html': 'text/html',
+    '.jpeg': 'image/jpeg',
+    '.jpg': 'image/jpeg',
+    '.js': 'application/javascript',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.svg': 'image/svg',
+    '.txt': 'text/plain'
 };
 
 function onClientError (error, socket) {
@@ -45,7 +60,7 @@ function responseRedirect (response, location) {
 
 function serve (request, response) {
 
-    const baseDirectory = configuration.baseDirectory;
+    const baseDirectory = CONFIGURATION.baseDirectory;
     const requestedClientPath = request.url;
     const requestedMethod = request.method;
     const requestedServerPath = ServerPath.join(baseDirectory, request.url);
@@ -71,50 +86,13 @@ function serve (request, response) {
 
     const requestServerStats = FS.statSync(requestedServerPath);
 
-    let contentLength = requestServerStats.size;
-    let contentType;
-
-    switch (ServerPath.extname(requestedServerPath)) {
-        default: 
-            contentType = 'application/octet-stream';
-            break;
-        case '':
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-        case '.gif':
-            contentType = 'image/gif';
-            break;
-        case '.htm':
-        case '.html':
-            contentType = 'text/html';
-            break;
-        case '.jpg':
-        case '.jpeg':
-            contentType = 'image/jpeg';
-            break;
-        case '.js':
-            contentType = 'application/javascript';
-            break;
-        case '.json':
-            contentType = 'application/json';
-            break;
-        case '.png':
-            contentType = 'image/png';
-            break;
-        case '.svg':
-            contentType = 'image/svg';
-            break;
-        case '.txt':
-            contentType = 'text/plain';
-            break;
-    }
-
-    if (typeof contentType === 'undefined') {
+    if (requestServerStats.isDirectory()) {
         responseRedirect(response, ClientPath.join(requestedClientPath, 'index.html'));
         return;
     }
+
+    let contentLength = requestServerStats.size;
+    let contentType = (CONTENT_TYPES[ServerPath.extname(requestedServerPath)] || CONTENT_TYPES['.bin']);
 
     if (response.finished) {
         return;
@@ -140,9 +118,9 @@ HTTP
     .createServer(serve)
     .on('clientError', onClientError)
     .on('error', onError)
-    .listen(configuration.serverPort, () => {
+    .listen(CONFIGURATION.serverPort, () => {
 
-        const host = 'localhost:' + configuration.serverPort;
+        const host = 'localhost:' + CONFIGURATION.serverPort;
         const hostURL = 'http://' + host + '/tests_results.html';
 
         console.info(`Listening on ${host}...`);

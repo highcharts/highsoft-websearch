@@ -3,7 +3,7 @@
     "compilerOptions": {
         "declaration": true,
         "module": "none",
-        "outFile": "../../client/highsoft-search.js",
+        "outFile": "../../client/highsoft-websearch.js",
         "rootDir": "./",
         "target": "es5",
         "lib": [

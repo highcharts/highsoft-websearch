@@ -4,8 +4,110 @@
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftSearch;
-(function (HighsoftSearch) {
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
+    var Dictionary = (function () {
+        function Dictionary() {
+            var e_1, _a;
+            var dictionaries = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                dictionaries[_i] = arguments[_i];
+            }
+            var dictionary = dictionaries.shift();
+            if (typeof dictionary === 'undefined') {
+                this._keys = [];
+                this._values = [];
+                return;
+            }
+            this._keys = dictionary.keys;
+            this._values = dictionary.values;
+            var keys;
+            var values;
+            try {
+                for (var dictionaries_1 = __values(dictionaries), dictionaries_1_1 = dictionaries_1.next(); !dictionaries_1_1.done; dictionaries_1_1 = dictionaries_1.next()) {
+                    dictionary = dictionaries_1_1.value;
+                    keys = dictionary._keys;
+                    values = dictionary._values;
+                    for (var index = 0, indexEnd = keys.length; index < indexEnd; ++index) {
+                        this.set(keys[index], values[index]);
+                    }
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (dictionaries_1_1 && !dictionaries_1_1.done && (_a = dictionaries_1.return)) _a.call(dictionaries_1);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        }
+        Object.defineProperty(Dictionary.prototype, "keys", {
+            get: function () {
+                return this._keys.slice();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Dictionary.prototype, "values", {
+            get: function () {
+                return this._values.slice();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Dictionary.prototype.contains = function (key) {
+            return (this._keys.indexOf(key) !== -1);
+        };
+        Dictionary.prototype.get = function (key) {
+            var keys = this._keys;
+            var values = this._values;
+            var index = keys.indexOf(key);
+            if (index === -1) {
+                return;
+            }
+            return values[index];
+        };
+        Dictionary.prototype.set = function (key, value) {
+            var keys = this._keys;
+            var values = this._values;
+            var index = keys.indexOf(key);
+            if (typeof value === 'undefined') {
+                if (index > -1) {
+                    keys.splice(index, 1);
+                    values.splice(index, 1);
+                }
+                return;
+            }
+            if (index === -1) {
+                keys.push(key);
+                values.push(value);
+            }
+            else {
+                values[index] = value;
+            }
+        };
+        return Dictionary;
+    }());
+    HighsoftWebsearch.Dictionary = Dictionary;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
     function connect(basePath, inputElement, buttonElement, outputElement) {
         if (typeof inputElement === 'string') {
             inputElement = (document.getElementById(inputElement) || '');
@@ -25,17 +127,17 @@ var HighsoftSearch;
         if (!(buttonElement instanceof HTMLElement)) {
             throw new Error('Button element not found.');
         }
-        return new HighsoftSearch.Search(basePath, inputElement, outputElement, buttonElement);
+        return new HighsoftWebsearch.Search(basePath, inputElement, outputElement, buttonElement);
     }
-    HighsoftSearch.connect = connect;
-})(HighsoftSearch || (HighsoftSearch = {}));
+    HighsoftWebsearch.connect = connect;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftSearch;
-(function (HighsoftSearch) {
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
     var Download = (function () {
         function Download(url, statusCode, contentType, content) {
             this._content = content;
@@ -100,8 +202,8 @@ var HighsoftSearch;
         });
         return Download;
     }());
-    HighsoftSearch.Download = Download;
-})(HighsoftSearch || (HighsoftSearch = {}));
+    HighsoftWebsearch.Download = Download;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
@@ -112,17 +214,6 @@ var HighsoftSearch;
  *  Copyright (C) Highsoft AS
  *
  * */
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
     if (!m) return o;
@@ -139,8 +230,8 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-var HighsoftSearch;
-(function (HighsoftSearch) {
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
     var Search = (function () {
         function Search(basePath, inputElement, outputElement, buttonElement) {
             this._basePath = basePath;
@@ -209,10 +300,10 @@ var HighsoftSearch;
             if (typeof searchTerms === 'undefined') {
                 Promise.resolve('');
             }
-            return HighsoftSearch.Download
+            return HighsoftWebsearch.Download
                 .fromURL(item.url)
                 .then(function (download) {
-                var e_1, _a;
+                var e_2, _a;
                 var downloadDocument = document.createElement('html');
                 downloadDocument.innerHTML = download.content;
                 var downloadBody = downloadDocument.getElementsByTagName('body')[0];
@@ -220,7 +311,7 @@ var HighsoftSearch;
                     typeof searchTerms === 'undefined') {
                     return '';
                 }
-                var preview = HighsoftSearch.KeywordFilter.getWords(downloadBody.innerText);
+                var preview = HighsoftWebsearch.KeywordFilter.getWords(downloadBody.innerText);
                 var previewLowerCase = preview.map(function (word) { return word.toLowerCase(); });
                 var previewIndex = -1;
                 var previewStart = 0;
@@ -234,12 +325,12 @@ var HighsoftSearch;
                         }
                     }
                 }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
                 finally {
                     try {
                         if (searchTerms_1_1 && !searchTerms_1_1.done && (_a = searchTerms_1.return)) _a.call(searchTerms_1);
                     }
-                    finally { if (e_1) throw e_1.error; }
+                    finally { if (e_2) throw e_2.error; }
                 }
                 if (previewIndex < 10) {
                     previewEnd = 21;
@@ -355,7 +446,7 @@ var HighsoftSearch;
         Search.prototype.onTimeout = function () {
             var _this = this;
             var query = this._inputElement.value;
-            var words = HighsoftSearch.KeywordFilter.getWords(query);
+            var words = HighsoftWebsearch.KeywordFilter.getWords(query);
             if (words.length === 0 || words[0].length < 2) {
                 this.hideResults();
                 return;
@@ -381,56 +472,52 @@ var HighsoftSearch;
             }
         };
         Search.prototype.consolidate = function (keywordFiles) {
-            var e_2, _a, e_3, _b;
-            var consolidatedItems = {};
+            var e_3, _a, e_4, _b;
+            var consolidatedItems = new HighsoftWebsearch.Dictionary();
             var keywordFile;
+            var keywordItem;
             var keywordItems;
-            var keywordItemURL;
-            var keywordItemURLs;
             try {
                 for (var keywordFiles_1 = __values(keywordFiles), keywordFiles_1_1 = keywordFiles_1.next(); !keywordFiles_1_1.done; keywordFiles_1_1 = keywordFiles_1.next()) {
                     keywordFile = keywordFiles_1_1.value;
-                    keywordItems = keywordFile.items;
-                    keywordItemURLs = Object.keys(keywordItems);
+                    keywordItems = keywordFile.items.values;
                     try {
-                        for (var keywordItemURLs_1 = (e_3 = void 0, __values(keywordItemURLs)), keywordItemURLs_1_1 = keywordItemURLs_1.next(); !keywordItemURLs_1_1.done; keywordItemURLs_1_1 = keywordItemURLs_1.next()) {
-                            keywordItemURL = keywordItemURLs_1_1.value;
-                            consolidatedItems[keywordItemURL] = (consolidatedItems[keywordItemURL] ||
-                                keywordItems[keywordItemURL]);
+                        for (var keywordItems_1 = (e_4 = void 0, __values(keywordItems)), keywordItems_1_1 = keywordItems_1.next(); !keywordItems_1_1.done; keywordItems_1_1 = keywordItems_1.next()) {
+                            keywordItem = keywordItems_1_1.value;
+                            if (!consolidatedItems.contains(keywordItem.url)) {
+                                consolidatedItems.set(keywordItem.url, keywordItem);
+                            }
                         }
                     }
-                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
                     finally {
                         try {
-                            if (keywordItemURLs_1_1 && !keywordItemURLs_1_1.done && (_b = keywordItemURLs_1.return)) _b.call(keywordItemURLs_1);
+                            if (keywordItems_1_1 && !keywordItems_1_1.done && (_b = keywordItems_1.return)) _b.call(keywordItems_1);
                         }
-                        finally { if (e_3) throw e_3.error; }
+                        finally { if (e_4) throw e_4.error; }
                     }
                 }
             }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (keywordFiles_1_1 && !keywordFiles_1_1.done && (_a = keywordFiles_1.return)) _a.call(keywordFiles_1);
                 }
-                finally { if (e_2) throw e_2.error; }
+                finally { if (e_3) throw e_3.error; }
             }
-            return Object
-                .keys(consolidatedItems)
-                .map(function (keywordItemURL) { return consolidatedItems[keywordItemURL]; })
-                .sort(HighsoftSearch.KeywordURLSet.sorter);
+            return consolidatedItems.values.sort(HighsoftWebsearch.KeywordURLSet.sorter);
         };
         Search.prototype.download = function (term) {
-            return HighsoftSearch.Download
+            return HighsoftWebsearch.Download
                 .fromURL(this.basePath + term + '.txt')
-                .then(function (download) { return new HighsoftSearch.KeywordURLSet(term, download.content); })
-                .catch(function () { return new HighsoftSearch.KeywordURLSet(term); });
+                .then(function (download) { return new HighsoftWebsearch.KeywordURLSet(term, download.content); })
+                .catch(function () { return new HighsoftWebsearch.KeywordURLSet(term); });
         };
         Search.prototype.find = function (query) {
-            var e_4, _a;
+            var e_5, _a;
             this._query = query;
             var downloadPromises = [];
-            var terms = this._terms = HighsoftSearch.KeywordFilter.getWords(query);
+            var terms = this._terms = HighsoftWebsearch.KeywordFilter.getWords(query);
             var term;
             try {
                 for (var terms_1 = __values(terms), terms_1_1 = terms_1.next(); !terms_1_1.done; terms_1_1 = terms_1.next()) {
@@ -438,12 +525,12 @@ var HighsoftSearch;
                     downloadPromises.push(this.download(term));
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (terms_1_1 && !terms_1_1.done && (_a = terms_1.return)) _a.call(terms_1);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_5) throw e_5.error; }
             }
             return Promise
                 .all(downloadPromises)
@@ -454,13 +541,13 @@ var HighsoftSearch;
             this._resultRenderer.call(this, this);
         };
         Search.prototype.showResults = function (keywordItems) {
-            var e_5, _a;
+            var e_6, _a;
             var pendingPreviews = this._pendingPreviews;
             this._outputElement.innerHTML = '';
             var previewElement;
             try {
-                for (var keywordItems_1 = __values(keywordItems), keywordItems_1_1 = keywordItems_1.next(); !keywordItems_1_1.done; keywordItems_1_1 = keywordItems_1.next()) {
-                    var keywordItem = keywordItems_1_1.value;
+                for (var keywordItems_2 = __values(keywordItems), keywordItems_2_1 = keywordItems_2.next(); !keywordItems_2_1.done; keywordItems_2_1 = keywordItems_2.next()) {
+                    var keywordItem = keywordItems_2_1.value;
                     previewElement = this._resultRenderer.call(this, this, keywordItem);
                     if (typeof previewElement === 'undefined') {
                         continue;
@@ -468,26 +555,26 @@ var HighsoftSearch;
                     pendingPreviews.push([previewElement, keywordItem]);
                 }
             }
-            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+            catch (e_6_1) { e_6 = { error: e_6_1 }; }
             finally {
                 try {
-                    if (keywordItems_1_1 && !keywordItems_1_1.done && (_a = keywordItems_1.return)) _a.call(keywordItems_1);
+                    if (keywordItems_2_1 && !keywordItems_2_1.done && (_a = keywordItems_2.return)) _a.call(keywordItems_2);
                 }
-                finally { if (e_5) throw e_5.error; }
+                finally { if (e_6) throw e_6.error; }
             }
             this.onScroll();
         };
         return Search;
     }());
-    HighsoftSearch.Search = Search;
-})(HighsoftSearch || (HighsoftSearch = {}));
+    HighsoftWebsearch.Search = Search;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftSearch;
-(function (HighsoftSearch) {
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
     var COMMON_KEYWORDS = [
         'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'com', 'could',
         'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is', 'it', 'my',
@@ -512,8 +599,8 @@ var HighsoftSearch;
         };
         return KeywordFilter;
     }());
-    HighsoftSearch.KeywordFilter = KeywordFilter;
-})(HighsoftSearch || (HighsoftSearch = {}));
+    HighsoftWebsearch.KeywordFilter = KeywordFilter;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
@@ -524,28 +611,28 @@ var HighsoftSearch;
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftSearch;
-(function (HighsoftSearch) {
+var HighsoftWebsearch;
+(function (HighsoftWebsearch) {
     var KeywordURLSet = (function () {
         function KeywordURLSet(keyword, content) {
-            this._items = {};
+            this._items = new HighsoftWebsearch.Dictionary();
             this._keyword = keyword;
             if (typeof content === 'string') {
                 this._items = content
                     .split('\n')
                     .map(function (line) { return line.split('\t', 3); })
-                    .reduce(KeywordURLSet.reducer, {});
+                    .reduce(KeywordURLSet.reducer, this._items);
             }
         }
         KeywordURLSet.reducer = function (items, item) {
             if (item.length < 3) {
                 return items;
             }
-            items[item[1]] = {
+            items.set(item[1], {
                 title: item[2],
                 url: item[1],
                 weight: parseInt(item[0])
-            };
+            });
             return items;
         };
         KeywordURLSet.sorter = function (itemA, itemB) {
@@ -565,26 +652,20 @@ var HighsoftSearch;
             enumerable: true,
             configurable: true
         });
-        KeywordURLSet.prototype.addURL = function (url, weight, title) {
-            this._items[url] = {
-                title: title,
-                url: url,
-                weight: weight
-            };
+        KeywordURLSet.prototype.addURL = function (weight, url, title) {
+            this._items.set(url, { title: title, url: url, weight: weight });
         };
         KeywordURLSet.prototype.containsURL = function (url) {
-            return (typeof this._items[url] !== 'undefined');
+            return this._items.contains(url);
         };
         KeywordURLSet.prototype.toString = function () {
             var items = this._items;
-            return Object
-                .keys(items)
-                .map(function (key) { return items[key]; })
+            return items.values
                 .sort(KeywordURLSet.sorter)
                 .map(function (item) { return (item.weight + '\t' + item.url + '\t' + item.title); })
                 .join('\n');
         };
         return KeywordURLSet;
     }());
-    HighsoftSearch.KeywordURLSet = KeywordURLSet;
-})(HighsoftSearch || (HighsoftSearch = {}));
+    HighsoftWebsearch.KeywordURLSet = KeywordURLSet;
+})(HighsoftWebsearch || (HighsoftWebsearch = {}));

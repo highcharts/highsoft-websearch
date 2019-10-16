@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftSearch {
+namespace HighsoftWebsearch {
     /**
      * A renderer of a row in the search results.
      *

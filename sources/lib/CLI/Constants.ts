@@ -8,7 +8,7 @@ export const VERSION = `Version ${require(__dirname + '/../../package.json').ver
 
 export const HELP = `${VERSION}
 
-Syntax:  highsoft-search [Options] [URL]
+Syntax:  highsoft-websearch [Options] [URL]
 
 Options:
 
@@ -24,5 +24,7 @@ Options:
 
 --timeout [number]     Set timeout in milliseconds to wait for server response.
 
---version, -v          Prints the version.
+--verbose, -v          Prints detailed actions for each URL and keyword file.
+
+--version              Prints the version.
 `;

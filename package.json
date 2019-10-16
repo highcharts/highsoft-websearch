@@ -1,17 +1,17 @@
 {
     "private": true,
     "author": "Highsoft AS",
-    "description": "Simple search system",
+    "description": "Simple search system for the web",
     "license": "SEE LICENSE IN LICENSE.md",
-    "homepage": "https://github.com/highcharts/highsoft-search#readme",
+    "homepage": "https://github.com/highcharts/highsoft-websearch#readme",
     "main": "lib/index.js",
-    "name": "highsoft-search",
+    "name": "highsoft-websearch",
     "version": "0.0.1",
     "bin": {
-        "highsoft-search": "bin/highsoft-search"
+        "highsoft-websearch": "bin/highsoft-websearch"
     },
     "bugs": {
-        "url": "https://github.com/highcharts/highsoft-search/issues"
+        "url": "https://github.com/highcharts/highsoft-websearch/issues"
     },
     "devDependencies": {
         "@types/node": "^12.7.11",
@@ -25,7 +25,7 @@
         "bin/",
         "client/",
         "lib/",
-        "hssearch.json",
+        "highsoft-websearch.json",
         "LICENSE.md",
         "README.md"
     ],
@@ -35,18 +35,18 @@
     },
     "keywords": [
         "Highsoft",
-        "search"
+        "websearch"
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/highcharts/highsoft-search.git"
+        "url": "https://github.com/highcharts/highsoft-websearch.git"
     },
     "scripts": {
         "build": "npm run clean && tsc --build sources/client sources/lib",
         "clean": "rm -rf client lib tests_results",
         "test": "npm run tests",
-        "tests": "npm run build && ./bin/highsoft-search --depth 2 --out tests_results --sideload tests/ http://127.0.0.1:8000/ && npm run tests-results",
-        "tests-online": "npm run build && ./bin/highsoft-search --depth 2 --out tests_results https://api.highcharts.com/class-reference/ && npm run tests-results",
+        "tests": "npm run build && ./bin/highsoft-websearch --depth 2 --out tests_results --sideload tests/ http://localhost:8000/tests/ && npm run tests-results",
+        "tests-online": "npm run build && ./bin/highsoft-websearch --depth 2 --out tests_results https://api.highcharts.com/class-reference/ && npm run tests-results",
         "tests-results": "node ./tests_results.js",
         "watch": "npm run build -- --watch"
     }
