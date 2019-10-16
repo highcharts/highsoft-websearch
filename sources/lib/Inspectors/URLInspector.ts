@@ -47,31 +47,26 @@ export class URLInspector extends Inspectors.Inspector {
 
     public getKeywordWeight (keyword: string): number {
 
-        const content = this.content;
+        const keywords = this.getKeywords();
+        const keywordIndex = keywords.indexOf(keyword);
 
-        let length = content.length;
+        let keywordsLength = keywords.length;
 
-        if (length === 0) {
+        if (keywordsLength === 0) {
             return 0;
         }
 
-        const index = content.indexOf(keyword);
-
-        if (length > 100) {
-            length = 100;
+        if (keywordsLength > 10) {
+            keywordsLength = 10;
         }
 
-        if (
-            index === -1 ||
-            index > length
-        ) {
-            return 0;
+        let indexWeight = 0;
+
+        if (keywordIndex > -1 && keywordIndex < keywordsLength) {
+            indexWeight = (1 - (keywordIndex / 10));
         }
 
-        const indexWeight = (100 - Math.round((index / length) * 100));
-        const lengthWeight = (100 - Math.round((length / 100) * 100));
-
-        return Math.round(((indexWeight * 25) + (lengthWeight * 75)) / 100);
+        return Math.round(indexWeight * 100);
     }
 
     public getLinkAliases (): Array<string> {

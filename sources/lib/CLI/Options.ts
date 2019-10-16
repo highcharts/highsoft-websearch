@@ -5,6 +5,7 @@
  * */
 
 import * as FS from 'fs';
+import * as Path from 'path';
 
 export class Options {
 
@@ -26,49 +27,60 @@ export class Options {
         return argv;
     }
 
-    public static getOptionsFromArguments (argv: Array<string>, options: Options = new Options()): (Options|null) {
-        try {
+    public static getOptionsFromArguments (argv: Array<string>, options: Options = new Options()): Options {
 
-            let arg: string;
+        argv = argv.map(Options.argumentMapper);
 
-            for (let i = 0, ie = argv.length; i < ie; ++i) {
+        let arg: string;
 
-                arg = argv[i];
+        for (let index = 0, indexEnd = argv.length; index < indexEnd; ++index) {
 
-                switch (arg) {
-                    case '--allowForeignDomains':
-                        options._allowForeignDomains = true;
-                        continue;
-                    case '--delay':
-                        arg = argv[++i];
-                        options._delay = parseInt(arg);
-                        continue;
-                    case '--depth':
-                        arg = argv[++i];
-                        options._depth = parseInt(arg);
-                        continue;
-                    case '--out':
-                        arg = argv[++i]
-                        options._out = arg;
-                        continue;
-                    case '--sideload':
-                        arg = argv[++i];
-                        options._sideload = arg;
-                        continue;
-                    case '--timeout':
-                        arg = argv[++i];
-                        options._timeout = parseInt(arg);
-                        continue;
-                    case '--verbose':
-                        options._verbose = true;
-                }
+            arg = argv[index];
+
+            switch (arg) {
+                case '--allowForeignDomains':
+                    options._allowForeignDomains = true;
+                    continue;
+                case '--copyClient':
+                    options._copyClient = true;
+                    continue;
+                case '--delay':
+                    arg = argv[++index];
+                    options._delay = parseInt(arg);
+                    continue;
+                case '--depth':
+                    arg = argv[++index];
+                    options._depth = parseInt(arg);
+                    continue;
+                case '--help':
+                    options._help = true;
+                    continue;
+                case '--out':
+                    arg = argv[++index]
+                    options._out = arg;
+                    continue;
+                case '--sideload':
+                    arg = argv[++index];
+                    options._sideload = arg;
+                    continue;
+                case '--timeout':
+                    arg = argv[++index];
+                    options._timeout = parseInt(arg);
+                    continue;
+                case '--verbose':
+                    options._verbose = true;
+                    continue;
+                case '--version':
+                    options._version = true;
+                    continue;
             }
 
-            return options;
+            if (index === (indexEnd - 1)) {
+                options._url = argv[index];
+            }
         }
-        catch (error) {
-            return null;
-        }
+
+        return options;
     }
 
     public static getOptionsFromFile (filePath: string, options: Options = new Options()): (Options|null|undefined) {
@@ -78,34 +90,44 @@ export class Options {
 
             try {
 
-                const optionsJSON: OptionsJSON = JSON.parse(file.toString());
+                const optionsJSON: (OptionsJSON|undefined) = JSON.parse(file.toString());
 
-                if (typeof optionsJSON.discoveryOptions !== 'undefined') {
+                if (typeof optionsJSON !== 'undefined') {
 
-                    const discoveryOptions = optionsJSON.discoveryOptions;
-
-                    if (typeof discoveryOptions.allowForeignDomains === 'boolean') {
-                        options._allowForeignDomains = discoveryOptions.allowForeignDomains;
+                    if (typeof optionsJSON.allowForeignDomains === 'boolean') {
+                        options._allowForeignDomains = optionsJSON.allowForeignDomains;
                     }
 
-                    if (typeof discoveryOptions.delay === 'number') {
-                        options._delay = discoveryOptions.delay;
+                    if (typeof optionsJSON.copyClient === 'boolean') {
+                        options._copyClient = optionsJSON.copyClient;
                     }
 
-                    if (typeof discoveryOptions.depth === 'number') {
-                        options._depth = discoveryOptions.depth;
+                    if (typeof optionsJSON.delay === 'number') {
+                        options._delay = optionsJSON.delay;
                     }
 
-                    if (typeof discoveryOptions.out === 'string') {
-                        options._out = discoveryOptions.out;
+                    if (typeof optionsJSON.depth === 'number') {
+                        options._depth = optionsJSON.depth;
                     }
 
-                    if (typeof discoveryOptions.sideload === 'string') {
-                        options._sideload = discoveryOptions.sideload;
+                    if (typeof optionsJSON.out === 'string') {
+                        options._out = Path.join(Path.dirname(filePath), optionsJSON.out);
                     }
 
-                    if (typeof discoveryOptions.timeout === 'number') {
-                        options._timeout = discoveryOptions.timeout;
+                    if (typeof optionsJSON.sideload === 'string') {
+                        options._sideload = optionsJSON.sideload;
+                    }
+
+                    if (typeof optionsJSON.timeout === 'number') {
+                        options._timeout = optionsJSON.timeout;
+                    }
+
+                    if (typeof optionsJSON.url === 'string') {
+                        options._url = optionsJSON.url;
+                    }
+
+                    if (typeof optionsJSON.verbose === 'boolean') {
+                        options._verbose = optionsJSON.verbose;
                     }
                 }
 
@@ -128,11 +150,14 @@ export class Options {
 
     private constructor () {
         this._allowForeignDomains = false;
+        this._copyClient = false;
         this._delay = 1000;
         this._depth = 1;
+        this._help = false;
         this._out = process.cwd();
         this._timeout = 60000;
         this._verbose = false;
+        this._version = false;
     }
 
     /* *
@@ -142,15 +167,23 @@ export class Options {
      * */
 
     private _allowForeignDomains: boolean;
+    private _copyClient: boolean;
     private _delay: number;
     private _depth: number;
-    private _sideload: (string|undefined);
+    private _help: boolean;
     private _out: string;
+    private _sideload: (string|undefined);
     private _timeout: number;
+    private _url: (string|undefined);
     private _verbose: boolean;
+    private _version: boolean;
 
     public get allowForeignDomains (): boolean {
         return this._allowForeignDomains;
+    }
+
+    public get copyClient (): boolean {
+        return this._copyClient;
     }
 
     public get delay (): number {
@@ -159,6 +192,10 @@ export class Options {
 
     public get depth (): number {
         return this._depth;
+    }
+
+    public get help (): boolean {
+        return this._help;
     }
 
     public get out (): string {
@@ -173,8 +210,16 @@ export class Options {
         return this._timeout;
     }
 
+    public get url (): (string|undefined) {
+        return this._url;
+    }
+
     public get verbose (): boolean {
         return this._verbose;
+    }
+
+    public get version (): boolean {
+        return this._version;
     }
 }
 
@@ -185,15 +230,15 @@ export class Options {
  * */
 
 export interface OptionsJSON {
-    discoveryOptions?: {
-        allowForeignDomains?: boolean;
-        delay?: number;
-        depth?: number;
-        out?: string;
-        sideload?: string;
-        timeout?: number;
-        verbose?: boolean;
-    }
+    allowForeignDomains?: boolean;
+    copyClient?: boolean;
+    delay?: number;
+    depth?: number;
+    out?: string;
+    sideload?: string;
+    timeout?: number;
+    url?: string;
+    verbose?: boolean;
 }
 
 export default Options;

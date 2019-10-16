@@ -79,6 +79,7 @@ declare namespace HighsoftWebsearch {
         resultRenderer: ResultFormatter;
         readonly terms: (Array<string> | undefined);
         private onButtonClick;
+        private onInputChange;
         private onInputKeyDown;
         private onScroll;
         private onTimeout;

@@ -33,6 +33,9 @@ export class Application {
                 writeStream = process.stdout;
             }
 
+            writeStream.write('[');
+            writeStream.write((new Date()).toTimeString().substr(0, 8));
+            writeStream.write('] ERROR: ');
             writeStream.write(message.toString());
             writeStream.write('\n');
 
@@ -61,39 +64,44 @@ export class Application {
 
     public static main (): void {
 
-        const argv = process.argv.slice(2).map(CLI.Options.argumentMapper);
+        let options = CLI.Options.getOptionsFromArguments(process.argv);
 
-        if (argv.includes('--help') || argv.length === 0) {
+        if (options.help) {
             Application.success(CLI.HELP);
             return;
         }
 
-        if (argv.includes('--version')) {
+        if (options.version) {
             Application.success(CLI.VERSION);
+            return;
+        }
+
+        if (FS.existsSync('highsoft-websearch.json')) {
+            options = (CLI.Options.getOptionsFromFile('highsoft-websearch.json', options) || options);
+        }
+        else if (options.verbose) {
+            Application.log('Configuration "highsoft-websearch.json" not found.');
+        }
+
+        options = CLI.Options.getOptionsFromArguments(process.argv, options);
+
+        if (options === null) {
+            Application.error('Option arguments are invalid.');
+            return;
+        }
+
+        if (typeof options.url !== 'string') {
+            Application.success(CLI.HELP);
             return;
         }
 
         let url: URL;
 
         try {
-            url = new URL(argv[argv.length-1]);
+            url = new URL(options.url);
         }
         catch (error) {
             Application.error('URL is invalid.');
-            return;
-        }
-
-        let options = CLI.Options.getOptionsFromFile('highsoft-websearch.json');
-
-        if (options === null) {
-            Application.error('Options file "highsoft-websearch.json" is invalid.');
-            return;
-        }
-
-        options = CLI.Options.getOptionsFromArguments(argv, options);
-
-        if (options === null) {
-            Application.error('Option arguments are invalid.');
             return;
         }
 
@@ -144,6 +152,29 @@ export class Application {
      *  Functions
      *
      * */
+
+    private copyClient (directoryPath: string, verbose?: boolean): Promise<void> {
+        return new Promise((resolve, reject) => {
+
+            if (verbose) {
+                Application.log('Copy highsoft-websearch.js');
+            }
+
+            FS.copyFile(
+                Path.join(__dirname, '..', '..', 'client', 'highsoft-websearch.js'),
+                Path.join(directoryPath, 'highsoft-websearch.js'),
+                (error) => {
+
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+
+                    resolve();
+                }
+            );
+        });
+    }
 
     private createDirectory (directoryPath: string, verbose?: boolean): Promise<void> {
 
@@ -298,24 +329,25 @@ export class Application {
 
     private run (): Promise<void> {
 
-        const depthOptions = this._options.depth;
-        const outOptions = this._options.out;
+        const copyClient = this._options.copyClient;
+        const depth = this._options.depth;
+        const out = this._options.out;
         const verbose = this._options.verbose;
 
         return Promise
             .resolve()
             .then(() => verbose && Application.log('Initializing...'))
-            .then(() => this.loadKeywordURLSets(outOptions, verbose))
+            .then(() => this.loadKeywordURLSets(out, verbose))
             .then(() => Application.log('Inspecting...'))
-            .then(() => this.inspectAll(depthOptions, verbose))
+            .then(() => this.inspectAll(depth, verbose))
             .then(() => verbose && Application.log('Saving...'))
-            .then(() => this.saveAll(outOptions, verbose))
-            .then(() => 'Done.')
-            .then(Application.success)
+            .then(() => this.saveAll(out, copyClient, verbose))
+            .then(() => Application.log('Done.'))
+            .then(() => Application.success())
             .catch(Application.error);
     }
 
-    private saveAll (directoryPath: string, verbose?: boolean): Promise<Array<void>> {
+    private saveAll (directoryPath: string, copyClient: boolean, verbose?: boolean): Promise<void> {
         return this
             .createDirectory(directoryPath, verbose)
             .then(() => {
@@ -330,6 +362,14 @@ export class Application {
                 }
 
                 return Promise.all(savePromises);
+            })
+            .then(() => {
+
+                if (copyClient) {
+                    return this.copyClient(directoryPath, verbose);
+                }
+
+                return Promise.resolve();
             });
     }
 

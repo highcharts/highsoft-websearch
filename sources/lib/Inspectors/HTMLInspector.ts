@@ -20,13 +20,13 @@ const TAG_PATTERN = /<[\/!]?[\w-]+[^>]*>/;
 const TITLE_PATTERN = /<title[^>]*>([\s\S]+?)<\/title>/;
 const TITLE_WEIGHT: Record<string, number> = {
     title: 100,
-    h1: 90,
-    h2: 80,
-    h3: 70,
-    h4: 60,
-    h5: 50,
-    h6: 40,
-    dt: 30,
+    h1: 80,
+    h2: 70,
+    h3: 60,
+    h4: 50,
+    h5: 40,
+    h6: 30,
+    dt: 10,
     a: 10
 }
 

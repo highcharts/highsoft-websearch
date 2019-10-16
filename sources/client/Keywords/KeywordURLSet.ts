@@ -47,7 +47,18 @@ namespace HighsoftWebsearch {
          * Descending order of keyword items.
          */
         public static sorter (itemA: KeywordItem, itemB: KeywordItem): number {
-            return (itemB.weight - itemA.weight);
+
+            const weightA = itemA.weight;
+            const weightB = itemB.weight;
+
+            if (weightA !== weightB) {
+                return (weightB - weightA);
+            }
+
+            const urlA = itemA.url;
+            const urlB = itemB.url;
+            
+            return (urlA < urlB ? -1 : urlA > urlB ? 1 : 0);
         }
 
         /* *
@@ -120,7 +131,16 @@ namespace HighsoftWebsearch {
          * Title of the URL content.
          */
         public addURL (weight: number, url: string, title: string) {
-            this._items.set(url, { title, url, weight});
+
+            const items = this._items;
+            const item = items.get(url);
+
+            if (
+                typeof item === 'undefined' ||
+                item.weight < weight
+            ) {
+                items.set(url, { title, url, weight });
+            }
         }
 
         /**

@@ -1,7 +1,9 @@
 {
     "allowForeignDomains": false,
+    "copyClient": true,
     "delay": 1000,
-    "depth": 1,
+    "depth": 2,
+    "out": "tests_results/",
     "timeout": 60000,
     "verbose": false
 }

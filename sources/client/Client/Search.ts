@@ -255,6 +255,22 @@ namespace HighsoftWebsearch {
             this.onTimeout();
         }
 
+        private onInputChange (evt: Event): void {
+
+            const inputElement = this._inputElement;
+
+            if (evt.target !== inputElement) {
+                return;
+            }
+
+            const words = KeywordFilter.getWords(this._inputElement.value);
+
+            if (words.length === 0 || words[0].length < 2) {
+                this.hideResults();
+                return;
+            }
+        }
+
         private onInputKeyDown (evt: KeyboardEvent): void {
 
             clearTimeout(this._timeout);
@@ -330,6 +346,7 @@ namespace HighsoftWebsearch {
         private addEventListeners (): void {
 
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
+            this.inputElement.addEventListener('change', this.onInputChange.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
 
             if (this.outputElement.ownerDocument) {

@@ -123,9 +123,10 @@ export abstract class Load {
             for (keyword of keywords) {
 
                 keywordURLSet = keywordURLSets.get(keyword);
-                
+
                 if (typeof keywordURLSet === 'undefined') {
-                    keywordURLSets.set(keyword, (keywordURLSet = new L.KeywordURLSet(keyword)));
+                    keywordURLSet = new L.KeywordURLSet(keyword);
+                    keywordURLSets.set(keyword, keywordURLSet);
                 }
 
                 keywordURLSet.addURL(inspector.getKeywordWeight(keyword), url, title);

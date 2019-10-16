@@ -19,6 +19,9 @@ already exist, it will add only new findings.
 highsoft-websearch --depth 3 --out ./local-keyword-directory/ https://my.website.example/
 ```
 
+Afterwards you have to upload the keyword directory to a server, where it can be
+accessed by web browsers. In your search site you include the client component,
+that can be found under 
 
 
 Options
@@ -27,16 +30,17 @@ Options
 There are several options to inspect multiple domains, subdomains, and offline
 files.
 
-| Option                  | Description                                              |
-|-------------------------|----------------------------------------------------------|
-| `--allowForeignDomains` | Allow foreign domains in link levels.                    |
-| `--delay [number]`      | Set delay in milliseconds between downloads.             |
-| `--depth [number]`      | Set number of link levels to follow.                     |
-| `--help`, `-h`          | Prints this help text.                                   |
-| `--out [directory]`     | Set output directory for keyword files.                  |
-| `--timeout [number]`    | Set timeout in milliseconds to wait for server response. |
-| `--verbose`, `-v`       | Prints detailed actions for each URL and keyword file.   |
-| `--version`,            | Prints the version number.                               |
+| Option                  | Description                                                  |
+|-------------------------|--------------------------------------------------------------|
+| `--allowForeignDomains` | Allow foreign domains in link levels.                        |
+| `--copyClient`          | Copy the client component into the output directory.         |
+| `--delay [number]`      | Set the delay in milliseconds between downloads.             |
+| `--depth [number]`      | Set the number of link levels to follow.                     |
+| `--help`, `-h`          | Prints this help text.                                       |
+| `--out [directory]`     | Set the output directory for keyword files.                  |
+| `--timeout [number]`    | Set the timeout in milliseconds to wait for server response. |
+| `--verbose`, `-v`       | Prints detailed actions for each URL and keyword file.       |
+| `--version`,            | Prints the version number.                                   |
 
 Options can be also set in a JSON file called `highsoft-websearch.json` in the
 current working directory.
@@ -44,9 +48,12 @@ current working directory.
 ```json
 {
     "allowForeignDomains": false,
+    "copyClient": true,
     "delay": 1000,
-    "depth": 1,
+    "depth": 2,
+    "out": "keywords/",
     "timeout": 60000,
+    "url": "https://www.domain.example/",
     "verbose": false
 }
 ```

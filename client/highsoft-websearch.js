@@ -407,6 +407,17 @@ var HighsoftWebsearch;
             }
             this.onTimeout();
         };
+        Search.prototype.onInputChange = function (evt) {
+            var inputElement = this._inputElement;
+            if (evt.target !== inputElement) {
+                return;
+            }
+            var words = HighsoftWebsearch.KeywordFilter.getWords(this._inputElement.value);
+            if (words.length === 0 || words[0].length < 2) {
+                this.hideResults();
+                return;
+            }
+        };
         Search.prototype.onInputKeyDown = function (evt) {
             clearTimeout(this._timeout);
             var inputElement = this._inputElement;
@@ -465,6 +476,7 @@ var HighsoftWebsearch;
         };
         Search.prototype.addEventListeners = function () {
             this.buttonElement.addEventListener('click', this.onButtonClick.bind(this));
+            this.inputElement.addEventListener('change', this.onInputChange.bind(this));
             this.inputElement.addEventListener('keydown', this.onInputKeyDown.bind(this));
             if (this.outputElement.ownerDocument) {
                 this.outputElement.ownerDocument
@@ -538,6 +550,7 @@ var HighsoftWebsearch;
                 .catch(function () { return []; });
         };
         Search.prototype.hideResults = function () {
+            this._pendingPreviews.length = 0;
             this._resultRenderer.call(this, this);
         };
         Search.prototype.showResults = function (keywordItems) {
@@ -576,12 +589,13 @@ var HighsoftWebsearch;
 var HighsoftWebsearch;
 (function (HighsoftWebsearch) {
     var COMMON_KEYWORDS = [
-        'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'com', 'could',
-        'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is', 'it', 'my',
-        'net', 'of', 'on', 'or', 'org', 'our', 'shall', 'should', 'that', 'the',
-        'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
+        'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'co', 'com',
+        'could', 'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is',
+        'it', 'my', 'net', 'no', 'of', 'on', 'or', 'org', 'our', 'shall',
+        'should', 'that', 'the', 'their', 'they', 'this', 'to', 'was', 'we',
+        'will', 'with', 'yes', 'you', 'your'
     ];
-    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-\.])*[^\d\W])(?=\W|$)/;
+    var WORD_PATTERN = /(?:^|\W)([^\d\W](?:[^\d\W]|[\-])*[^\d\W])(?=\W|$)/;
     var KeywordFilter = (function () {
         function KeywordFilter() {
         }
@@ -636,7 +650,14 @@ var HighsoftWebsearch;
             return items;
         };
         KeywordURLSet.sorter = function (itemA, itemB) {
-            return (itemB.weight - itemA.weight);
+            var weightA = itemA.weight;
+            var weightB = itemB.weight;
+            if (weightA !== weightB) {
+                return (weightB - weightA);
+            }
+            var urlA = itemA.url;
+            var urlB = itemB.url;
+            return (urlA < urlB ? -1 : urlA > urlB ? 1 : 0);
         };
         Object.defineProperty(KeywordURLSet.prototype, "items", {
             get: function () {
@@ -653,7 +674,12 @@ var HighsoftWebsearch;
             configurable: true
         });
         KeywordURLSet.prototype.addURL = function (weight, url, title) {
-            this._items.set(url, { title: title, url: url, weight: weight });
+            var items = this._items;
+            var item = items.get(url);
+            if (typeof item === 'undefined' ||
+                item.weight < weight) {
+                items.set(url, { title: title, url: url, weight: weight });
+            }
         };
         KeywordURLSet.prototype.containsURL = function (url) {
             return this._items.contains(url);

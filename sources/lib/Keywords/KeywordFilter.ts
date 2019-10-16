@@ -8,10 +8,11 @@
  * Contains common words, that are not useful as search terms.
  */
 const COMMON_KEYWORDS = [
-    'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'com', 'could',
-    'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is', 'it', 'my',
-    'net', 'of', 'on', 'or', 'org', 'our','shall',  'should', 'that', 'the',
-    'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'you', 'your'
+    'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'co', 'com',
+    'could', 'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is', 'it',
+    'my', 'net', 'no', 'of', 'on', 'or', 'org', 'our','shall', 'should', 'that',
+    'the', 'their', 'they', 'this', 'to', 'was', 'we', 'will', 'with', 'yes',
+    'you', 'your'
 ];
 
 /**
