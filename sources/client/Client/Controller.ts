@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     export class Controller {
 
         /* *
@@ -21,14 +21,14 @@ namespace HighsoftWebsearch {
          * @param search
          * The search instance as a reference for rendering.
          *
-         * @param item
-         * The search result in structure of a keyword item with title and URL.
+         * @param entry
+         * The search result in structure of a keyword entry with title and URL.
          */
-        public static defaultResultRenderer (controller: Controller, item?: KeywordItem): (HTMLElement|undefined) {
+        public static defaultResultRenderer (controller: Controller, entry?: KeywordEntry): (HTMLElement|undefined) {
 
             const outputElement = controller.outputElement;
 
-            if (typeof item === 'undefined') {
+            if (typeof entry === 'undefined') {
                 outputElement.style.display = 'none';
                 return;
             }
@@ -74,9 +74,9 @@ namespace HighsoftWebsearch {
                     break;
             }
 
-            linkElement.setAttribute('href', item.url);
-            linkElement.setAttribute('title', `Relevance: ${item.weight}%`);
-            linkElement.innerText = item.title;
+            linkElement.setAttribute('href', entry.url);
+            linkElement.setAttribute('title', `Relevance: ${entry.weight}%`);
+            linkElement.innerText = entry.title;
             headElement.appendChild(linkElement);
             resultElement.setAttribute('class', 'SearchResult');
             outputElement.style.display = '';
@@ -124,7 +124,7 @@ namespace HighsoftWebsearch {
         private _buttonElement: HTMLElement;
         private _inputElement: HTMLInputElement;
         private _outputElement: HTMLElement;
-        private _pendingPreviews: Array<[HTMLElement, KeywordItem]>;
+        private _pendingPreviews: Array<[HTMLElement, KeywordEntry]>;
         private _resultRenderer: ResultFormatter;
         private _search: Search;
         private _timeout: number;
@@ -209,19 +209,19 @@ namespace HighsoftWebsearch {
             const pendingPreviews = this._pendingPreviews;
             const scrollBorder = (window.innerHeight + window.scrollY + 16);
 
-            let pendingPreview: ([HTMLElement, KeywordItem]|undefined);
+            let pendingPreview: ([HTMLElement, KeywordEntry]|undefined);
 
             while (typeof (pendingPreview = pendingPreviews.shift()) !== 'undefined') {
 
-                const [ previewElement, previewItem ] = pendingPreview;
+                const [ previewElement, previewEntry ] = pendingPreview;
 
                 if (previewElement.offsetTop > scrollBorder) {
                     pendingPreviews.unshift(pendingPreview);
                     break;
                 }
 
-                Search
-                    .preview(previewItem, (this._search.terms || []))
+                this._search
+                    .preview(previewEntry)
                     .then(html => {
                         previewElement.innerHTML = html;
                     })
@@ -241,12 +241,12 @@ namespace HighsoftWebsearch {
 
             this._search
                 .find(query)
-                .then(items => {
-                    if (items.length === 0) {
+                .then(keywordEntries => {
+                    if (keywordEntries.length === 0) {
                         this.hideResults();
                     }
                     else {
-                        this.showResults(items)
+                        this.showResults(keywordEntries)
                     }
                 })
                 .catch(() => this.hideResults);
@@ -274,23 +274,24 @@ namespace HighsoftWebsearch {
             this._resultRenderer.call(this, this);
         }
 
-        private showResults (keywordItems: Array<KeywordItem>): void {
+        private showResults (keywordEntries: Array<KeywordEntry>): void {
 
             const pendingPreviews = this._pendingPreviews;
 
             this._outputElement.innerHTML = '';
 
+            let keywordEntry: (KeywordEntry|undefined);
             let previewElement: (HTMLElement|undefined);
 
-            for (let keywordItem of keywordItems) {
+            for (keywordEntry of keywordEntries) {
 
-                previewElement = this._resultRenderer.call(this, this, keywordItem);
+                previewElement = this._resultRenderer.call(this, this, keywordEntry);
 
                 if (typeof previewElement === 'undefined') {
                     continue;
                 }
 
-                pendingPreviews.push([previewElement, keywordItem]);
+                pendingPreviews.push([previewElement, keywordEntry]);
             }
 
             this.onScroll();

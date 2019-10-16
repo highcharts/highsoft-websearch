@@ -4,17 +4,17 @@
  *
  * */
 
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     /**
-     * A renderer of a row in the search results.
+     * Renders a given entry of search results.
      *
-     * @param search
-     * The search instance as a reference for rendering.
+     * @param controller
+     * Search controller as a reference for rendering.
      *
-     * @param item
-     * The search result in structure of a keyword item with title and URL.
+     * @param entry
+     * Search result in structure of a keyword entry with title and URL.
      */
     export interface ResultFormatter {
-        (search: Controller, item?: KeywordItem): (HTMLElement|undefined);
+        (controller: Controller, entry?: KeywordEntry): (HTMLElement|undefined);
     }
 }

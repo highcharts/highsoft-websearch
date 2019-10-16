@@ -4,80 +4,8 @@
  *
  * */
 
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     export class Search {
-
-        /* *
-         *
-         *  Static Functions
-         *
-         * */
-
-        /**
-         * Generates a preview text from the URL content of a keyword item.
-         *
-         * @param search
-         * The search instance as a reference for rendering.
-         *
-         * @param item
-         * The search result in structure of a keyword item with title and URL.
-         */
-        public static preview (item: KeywordItem, searchTerms: Array<string>): Promise<string> {
-
-            if (searchTerms.length === 0) {
-                Promise.resolve('');
-            }
-
-            return Download
-                .fromURL(item.url)
-                .then(download => {
-
-                    const downloadDocument = document.createElement('html');
-
-                    downloadDocument.innerHTML = download.content;
-
-                    const downloadBody = downloadDocument.getElementsByTagName('body')[0];
-
-                    if (typeof downloadBody === 'undefined') {
-                        return '';
-                    }
-
-                    const preview = KeywordFilter.getWords(downloadBody.innerText);
-                    const previewLowerCase = preview.map(word => word.toLowerCase());
-
-                    let previewIndex = -1;
-                    let previewStart = 0;
-                    let previewEnd = 0;
-
-                    for (let queryTerm of searchTerms) {
-
-                        previewIndex = previewLowerCase.indexOf(queryTerm.toLowerCase());
-
-                        if (previewIndex >= 0) {
-                            break;
-                        }
-                    }
-
-                    if (previewIndex < 10) {
-                        previewEnd = 21;
-                    }
-                    else {
-                        previewEnd = previewIndex + 11;
-                        previewStart = previewIndex - 10;
-                    }
-
-                    if (previewIndex === -1) {
-                        return preview.slice(previewStart, previewEnd).join(' ');
-                    }
-
-                    return (
-                        preview.slice(previewStart, previewIndex).join(' ') +
-                        ' <b>' + preview[previewIndex] + '</b> ' +
-                        preview.slice((previewIndex + 1), previewEnd).join(' ')
-                    );
-                })
-                .catch(() => '');
-        }
 
         /* *
          *
@@ -124,26 +52,26 @@ namespace HighsoftWebsearch {
          *
          * */
 
-        private consolidate (keywordFiles: Array<KeywordURLSet>): Array<KeywordItem> {
+        private consolidate (keywordFiles: Array<KeywordURLSet>): Array<KeywordEntry> {
 
-            const consolidatedItems: Dictionary<KeywordItem> = new Dictionary<KeywordItem>();
+            const consolidatedEntries: Dictionary<KeywordEntry> = new Dictionary<KeywordEntry>();
 
+            let keywordEntry: KeywordEntry;
+            let keywordEntries: Array<KeywordEntry>;
             let keywordFile: KeywordURLSet;
-            let keywordItem: KeywordItem;
-            let keywordItems: Array<KeywordItem>;
 
             for (keywordFile of keywordFiles) {
 
-                keywordItems = keywordFile.items.values;
+                keywordEntries = keywordFile.entries.values;
 
-                for (keywordItem of keywordItems) {
-                    if (!consolidatedItems.contains(keywordItem.url)) {
-                        consolidatedItems.set(keywordItem.url, keywordItem);
+                for (keywordEntry of keywordEntries) {
+                    if (!consolidatedEntries.contains(keywordEntry.url)) {
+                        consolidatedEntries.set(keywordEntry.url, keywordEntry);
                     }
                 }
             }
 
-            return consolidatedItems.values.sort(KeywordURLSet.sorter);
+            return consolidatedEntries.values.sort(KeywordURLSet.sorter);
         }
 
         public download (searchTerm: string): Promise<KeywordURLSet> {
@@ -153,9 +81,7 @@ namespace HighsoftWebsearch {
                 .catch(() => new KeywordURLSet(searchTerm));
         } 
 
-        public find (query: string): Promise<Array<KeywordItem>> {
-
-            this._query = query;
+        public find (query: string): Promise<Array<KeywordEntry>> {
 
             const downloadPromises: Array<Promise<KeywordURLSet>> = [];
             const terms = this._terms = KeywordFilter.getWords(query);
@@ -168,8 +94,74 @@ namespace HighsoftWebsearch {
 
             return Promise
                 .all(downloadPromises)
-                .then(this.consolidate)
+                .then(keywordEntries => this.consolidate(keywordEntries))
+                .then(keywordEntries => {
+                    this._query = query;
+                    return keywordEntries;
+                })
                 .catch(() => []);
+        }
+
+        /**
+         * Generates a preview snippet from the URL content of a given keyword
+         * entry.
+         *
+         * @param entry
+         * Keyword entry to render a preview snippet from.
+         */
+        public preview (entry: KeywordEntry): Promise<string> {
+
+            const terms = (this.terms || []).slice();
+
+            return Download
+                .fromURL(entry.url)
+                .then(download => {
+
+                    const downloadDocument = document.createElement('html');
+
+                    downloadDocument.innerHTML = download.content;
+
+                    const downloadBody = downloadDocument.getElementsByTagName('body')[0];
+
+                    if (typeof downloadBody === 'undefined') {
+                        return '';
+                    }
+
+                    const preview = KeywordFilter.getWords(downloadBody.innerText);
+                    const previewLowerCase = preview.map(word => word.toLowerCase());
+
+                    let previewIndex = -1;
+                    let previewStart = 0;
+                    let previewEnd = 0;
+
+                    for (let term of terms) {
+
+                        previewIndex = previewLowerCase.indexOf(term.toLowerCase());
+
+                        if (previewIndex >= 0) {
+                            break;
+                        }
+                    }
+
+                    if (previewIndex < 10) {
+                        previewEnd = 21;
+                    }
+                    else {
+                        previewEnd = previewIndex + 11;
+                        previewStart = previewIndex - 10;
+                    }
+
+                    if (previewIndex === -1) {
+                        return preview.slice(previewStart, previewEnd).join(' ');
+                    }
+
+                    return (
+                        preview.slice(previewStart, previewIndex).join(' ') +
+                        ' <b>' + preview[previewIndex] + '</b> ' +
+                        preview.slice((previewIndex + 1), previewEnd).join(' ')
+                    );
+                })
+                .catch(() => '');
         }
     }
 }

@@ -1,4 +1,4 @@
-Highsoft Websearch
+Highsoft WebSearch
 ==================
 
 The search system consists of a client component and a generator component. A
@@ -20,8 +20,8 @@ highsoft-websearch --depth 3 --out ./keyword-directory/ https://my.website.examp
 ```
 
 Afterwards you have to upload the keyword directory to a server, where it can be
-accessed by web browsers. In your search site you include the client component,
-that can be found in the keyword directory or under
+accessed by web browsers. In your search site you have to include the client
+component, that can be found in the keyword directory or under
 `node_modules/highsoft-websearch/client/highsoft-websearch.js`.
 
 

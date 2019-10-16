@@ -7,7 +7,7 @@
 /**
  * Represents a search result in a keyword file.
  */
-export interface KeywordItem {
+export interface KeywordEntry {
     /**
      * Title of the URL.
      */
@@ -22,4 +22,4 @@ export interface KeywordItem {
     url: string;
 }
 
-export default KeywordItem;
+export default KeywordEntry;

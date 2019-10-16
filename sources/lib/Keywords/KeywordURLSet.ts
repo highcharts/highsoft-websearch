@@ -7,7 +7,7 @@
 import * as L from '../index';
 
 /**
- * Set of keyword items containg URL, Title, and weight.
+ * Set of keyword entries containg URL, Title, and weight.
  */
 export class KeywordURLSet {
 
@@ -18,46 +18,53 @@ export class KeywordURLSet {
      * */
 
     /**
-     * Converts a splitted string to a keyword item dictionary.
+     * Converts a splitted string to a keyword entry and adds it to a
+     * dictionary.
      *
-     * @param items
-     * Initial keyword item dictionary.
+     * @param entries
+     * Initial keyword entries.
      *
-     * @param item
-     * Splitted string with item values.
+     * @param values
+     * Splitted string with entry values.
      */
-    private static reducer (items: L.Dictionary<L.KeywordItem>, item: Array<string>): L.Dictionary<L.KeywordItem> {
+    private static reducer (entries: L.Dictionary<L.KeywordEntry>, values: Array<string>): L.Dictionary<L.KeywordEntry> {
 
-        if (item.length < 3) {
-            return items;
+        if (values.length < 3) {
+            return entries;
         }
 
-        items.set(
-            item[1],
+        entries.set(
+            values[1],
             {
-                title: item[2],
-                url: item[1],
-                weight: parseInt(item[0])
+                title: values[2],
+                url: values[1],
+                weight: parseInt(values[0])
             }
         );
 
-        return items;
+        return entries;
     }
 
     /**
-     * Descending order of keyword items.
+     * Descending order of keyword entries.
+     *
+     * @param entryA
+     * First keyword entry to compare.
+     *
+     * @param entryB
+     * Second keyword entry to compare.
      */
-    public static sorter (itemA: L.KeywordItem, itemB: L.KeywordItem): number {
+    public static sorter (entryA: L.KeywordEntry, entryB: L.KeywordEntry): number {
 
-        const weightA = itemA.weight;
-        const weightB = itemB.weight;
+        const weightA = entryA.weight;
+        const weightB = entryB.weight;
 
         if (weightA !== weightB) {
             return (weightB - weightA);
         }
 
-        const urlA = itemA.url;
-        const urlB = itemB.url;
+        const urlA = entryA.url;
+        const urlB = entryB.url;
         
         return (urlA < urlB ? -1 : urlA > urlB ? 1 : 0);
     }
@@ -69,7 +76,7 @@ export class KeywordURLSet {
      * */
 
     /**
-     * Creates a set of keyword items containing url, title, and weight.
+     * Creates a set of keyword entries containing url, title, and weight.
      *
      * @param keyword
      * Keyword of the set.
@@ -79,14 +86,14 @@ export class KeywordURLSet {
      */
     public constructor (keyword: string, content?: string) {
 
-        this._items = new L.Dictionary<L.KeywordItem>();
+        this._entries = new L.Dictionary<L.KeywordEntry>();
         this._keyword = keyword;
 
         if (typeof content === 'string') {
-            this._items = content
+            this._entries = content
                 .split('\n')
                 .map(line => line.split('\t', 3))
-                .reduce(KeywordURLSet.reducer, this._items);
+                .reduce(KeywordURLSet.reducer, this._entries);
         }
     }
 
@@ -96,14 +103,14 @@ export class KeywordURLSet {
      *
      * */
 
-    private _items: L.Dictionary<L.KeywordItem>;
+    private _entries: L.Dictionary<L.KeywordEntry>;
     private _keyword: string;
 
     /**
-     * Returns the dictionary with all keyword items accessible via URL.
+     * Returns the dictionary with all keyword entries accessible via URL.
      */
-    public get items (): L.Dictionary<L.KeywordItem> {
-        return this._items;
+    public get entries (): L.Dictionary<L.KeywordEntry> {
+        return this._entries;
     }
 
     /**
@@ -133,14 +140,14 @@ export class KeywordURLSet {
      */
     public addURL (weight: number, url: string, title: string) {
 
-        const items = this._items;
-        const item = items.get(url);
+        const entries = this._entries;
+        const entry = entries.get(url);
 
         if (
-            typeof item === 'undefined' ||
-            item.weight < weight
+            typeof entry === 'undefined' ||
+            entry.weight < weight
         ) {
-            items.set(url, { title, url, weight });
+            entries.set(url, { title, url, weight });
         }
     }
 
@@ -151,7 +158,7 @@ export class KeywordURLSet {
      * URL to find in the set.
      */
     public containsURL (url: string): boolean {
-        return this._items.contains(url);
+        return this._entries.contains(url);
     }
 
     /**
@@ -159,11 +166,11 @@ export class KeywordURLSet {
      */
     public toString (): string {
 
-        const items = this._items;
+        const entries = this._entries;
 
-        return items.values
+        return entries.values
             .sort(KeywordURLSet.sorter)
-            .map(item => (item.weight + '\t' + item.url + '\t' + item.title))
+            .map(entry => (entry.weight + '\t' + entry.url + '\t' + entry.title))
             .join('\n');
     }
 }

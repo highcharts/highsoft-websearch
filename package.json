@@ -1,7 +1,7 @@
 {
     "private": true,
     "author": "Highsoft AS",
-    "description": "Simple search system for the web",
+    "description": "Highsoft WebSearch - Simple search system for the web",
     "license": "SEE LICENSE IN LICENSE.md",
     "homepage": "https://github.com/highcharts/highsoft-websearch#readme",
     "main": "lib/index.js",

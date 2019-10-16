@@ -7,7 +7,7 @@
 /**
  * Namespace in the web browser on the client side.
  */
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     export function connect (
         basePath: string,
         inputElement: (string|HTMLInputElement),

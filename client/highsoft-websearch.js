@@ -15,8 +15,8 @@ var __values = (this && this.__values) || function(o) {
     };
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     var Dictionary = (function () {
         function Dictionary() {
             var e_1, _a;
@@ -99,15 +99,15 @@ var HighsoftWebsearch;
         };
         return Dictionary;
     }());
-    HighsoftWebsearch.Dictionary = Dictionary;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.Dictionary = Dictionary;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     function connect(basePath, inputElement, buttonElement, outputElement) {
         if (typeof inputElement === 'string') {
             inputElement = (document.getElementById(inputElement) || '');
@@ -127,10 +127,10 @@ var HighsoftWebsearch;
         if (!(buttonElement instanceof HTMLElement)) {
             throw new Error('Button element not found.');
         }
-        return new HighsoftWebsearch.Controller(new HighsoftWebsearch.Search(basePath), inputElement, outputElement, buttonElement);
+        return new HighsoftWebSearch.Controller(new HighsoftWebSearch.Search(basePath), inputElement, outputElement, buttonElement);
     }
-    HighsoftWebsearch.connect = connect;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.connect = connect;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
@@ -152,8 +152,8 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     var Controller = (function () {
         function Controller(search, inputElement, outputElement, buttonElement) {
             this._buttonElement = buttonElement;
@@ -165,9 +165,9 @@ var HighsoftWebsearch;
             this._timeout = 0;
             this.addEventListeners();
         }
-        Controller.defaultResultRenderer = function (controller, item) {
+        Controller.defaultResultRenderer = function (controller, entry) {
             var outputElement = controller.outputElement;
-            if (typeof item === 'undefined') {
+            if (typeof entry === 'undefined') {
                 outputElement.style.display = 'none';
                 return;
             }
@@ -209,9 +209,9 @@ var HighsoftWebsearch;
                     outputElement.appendChild(resultElement);
                     break;
             }
-            linkElement.setAttribute('href', item.url);
-            linkElement.setAttribute('title', "Relevance: " + item.weight + "%");
-            linkElement.innerText = item.title;
+            linkElement.setAttribute('href', entry.url);
+            linkElement.setAttribute('title', "Relevance: " + entry.weight + "%");
+            linkElement.innerText = entry.title;
             headElement.appendChild(linkElement);
             resultElement.setAttribute('class', 'SearchResult');
             outputElement.style.display = '';
@@ -267,7 +267,7 @@ var HighsoftWebsearch;
             if (evt.target !== inputElement) {
                 return;
             }
-            var words = HighsoftWebsearch.KeywordFilter.getWords(this._inputElement.value);
+            var words = HighsoftWebSearch.KeywordFilter.getWords(this._inputElement.value);
             if (words.length === 0 || words[0].length < 2) {
                 this.hideResults();
                 return;
@@ -290,13 +290,13 @@ var HighsoftWebsearch;
             var scrollBorder = (window.innerHeight + window.scrollY + 16);
             var pendingPreview;
             var _loop_1 = function () {
-                var _a = __read(pendingPreview, 2), previewElement = _a[0], previewItem = _a[1];
+                var _a = __read(pendingPreview, 2), previewElement = _a[0], previewEntry = _a[1];
                 if (previewElement.offsetTop > scrollBorder) {
                     pendingPreviews.unshift(pendingPreview);
                     return "break";
                 }
-                HighsoftWebsearch.Search
-                    .preview(previewItem, (this_1._search.terms || []))
+                this_1._search
+                    .preview(previewEntry)
                     .then(function (html) {
                     previewElement.innerHTML = html;
                 })
@@ -312,19 +312,19 @@ var HighsoftWebsearch;
         Controller.prototype.onTimeout = function () {
             var _this = this;
             var query = this._inputElement.value;
-            var words = HighsoftWebsearch.KeywordFilter.getWords(query);
+            var words = HighsoftWebSearch.KeywordFilter.getWords(query);
             if (words.length === 0 || words[0].length < 2) {
                 this.hideResults();
                 return;
             }
             this._search
                 .find(query)
-                .then(function (items) {
-                if (items.length === 0) {
+                .then(function (keywordEntries) {
+                if (keywordEntries.length === 0) {
                     _this.hideResults();
                 }
                 else {
-                    _this.showResults(items);
+                    _this.showResults(keywordEntries);
                 }
             })
                 .catch(function () { return _this.hideResults; });
@@ -341,25 +341,26 @@ var HighsoftWebsearch;
             this._pendingPreviews.length = 0;
             this._resultRenderer.call(this, this);
         };
-        Controller.prototype.showResults = function (keywordItems) {
+        Controller.prototype.showResults = function (keywordEntries) {
             var e_2, _a;
             var pendingPreviews = this._pendingPreviews;
             this._outputElement.innerHTML = '';
+            var keywordEntry;
             var previewElement;
             try {
-                for (var keywordItems_1 = __values(keywordItems), keywordItems_1_1 = keywordItems_1.next(); !keywordItems_1_1.done; keywordItems_1_1 = keywordItems_1.next()) {
-                    var keywordItem = keywordItems_1_1.value;
-                    previewElement = this._resultRenderer.call(this, this, keywordItem);
+                for (var keywordEntries_1 = __values(keywordEntries), keywordEntries_1_1 = keywordEntries_1.next(); !keywordEntries_1_1.done; keywordEntries_1_1 = keywordEntries_1.next()) {
+                    keywordEntry = keywordEntries_1_1.value;
+                    previewElement = this._resultRenderer.call(this, this, keywordEntry);
                     if (typeof previewElement === 'undefined') {
                         continue;
                     }
-                    pendingPreviews.push([previewElement, keywordItem]);
+                    pendingPreviews.push([previewElement, keywordEntry]);
                 }
             }
             catch (e_2_1) { e_2 = { error: e_2_1 }; }
             finally {
                 try {
-                    if (keywordItems_1_1 && !keywordItems_1_1.done && (_a = keywordItems_1.return)) _a.call(keywordItems_1);
+                    if (keywordEntries_1_1 && !keywordEntries_1_1.done && (_a = keywordEntries_1.return)) _a.call(keywordEntries_1);
                 }
                 finally { if (e_2) throw e_2.error; }
             }
@@ -367,15 +368,15 @@ var HighsoftWebsearch;
         };
         return Controller;
     }());
-    HighsoftWebsearch.Controller = Controller;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.Controller = Controller;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     var Download = (function () {
         function Download(url, statusCode, contentType, content) {
             this._content = content;
@@ -440,8 +441,8 @@ var HighsoftWebsearch;
         });
         return Download;
     }());
-    HighsoftWebsearch.Download = Download;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.Download = Download;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
@@ -452,63 +453,12 @@ var HighsoftWebsearch;
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     var Search = (function () {
         function Search(basePath) {
             this._basePath = basePath;
         }
-        Search.preview = function (item, searchTerms) {
-            if (searchTerms.length === 0) {
-                Promise.resolve('');
-            }
-            return HighsoftWebsearch.Download
-                .fromURL(item.url)
-                .then(function (download) {
-                var e_3, _a;
-                var downloadDocument = document.createElement('html');
-                downloadDocument.innerHTML = download.content;
-                var downloadBody = downloadDocument.getElementsByTagName('body')[0];
-                if (typeof downloadBody === 'undefined') {
-                    return '';
-                }
-                var preview = HighsoftWebsearch.KeywordFilter.getWords(downloadBody.innerText);
-                var previewLowerCase = preview.map(function (word) { return word.toLowerCase(); });
-                var previewIndex = -1;
-                var previewStart = 0;
-                var previewEnd = 0;
-                try {
-                    for (var searchTerms_1 = __values(searchTerms), searchTerms_1_1 = searchTerms_1.next(); !searchTerms_1_1.done; searchTerms_1_1 = searchTerms_1.next()) {
-                        var queryTerm = searchTerms_1_1.value;
-                        previewIndex = previewLowerCase.indexOf(queryTerm.toLowerCase());
-                        if (previewIndex >= 0) {
-                            break;
-                        }
-                    }
-                }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
-                finally {
-                    try {
-                        if (searchTerms_1_1 && !searchTerms_1_1.done && (_a = searchTerms_1.return)) _a.call(searchTerms_1);
-                    }
-                    finally { if (e_3) throw e_3.error; }
-                }
-                if (previewIndex < 10) {
-                    previewEnd = 21;
-                }
-                else {
-                    previewEnd = previewIndex + 11;
-                    previewStart = previewIndex - 10;
-                }
-                if (previewIndex === -1) {
-                    return preview.slice(previewStart, previewEnd).join(' ');
-                }
-                return (preview.slice(previewStart, previewIndex).join(' ') +
-                    ' <b>' + preview[previewIndex] + '</b> ' +
-                    preview.slice((previewIndex + 1), previewEnd).join(' '));
-            })
-                .catch(function () { return ''; });
-        };
         Object.defineProperty(Search.prototype, "basePath", {
             get: function () {
                 return this._basePath;
@@ -531,52 +481,52 @@ var HighsoftWebsearch;
             configurable: true
         });
         Search.prototype.consolidate = function (keywordFiles) {
-            var e_4, _a, e_5, _b;
-            var consolidatedItems = new HighsoftWebsearch.Dictionary();
+            var e_3, _a, e_4, _b;
+            var consolidatedEntries = new HighsoftWebSearch.Dictionary();
+            var keywordEntry;
+            var keywordEntries;
             var keywordFile;
-            var keywordItem;
-            var keywordItems;
             try {
                 for (var keywordFiles_1 = __values(keywordFiles), keywordFiles_1_1 = keywordFiles_1.next(); !keywordFiles_1_1.done; keywordFiles_1_1 = keywordFiles_1.next()) {
                     keywordFile = keywordFiles_1_1.value;
-                    keywordItems = keywordFile.items.values;
+                    keywordEntries = keywordFile.entries.values;
                     try {
-                        for (var keywordItems_2 = (e_5 = void 0, __values(keywordItems)), keywordItems_2_1 = keywordItems_2.next(); !keywordItems_2_1.done; keywordItems_2_1 = keywordItems_2.next()) {
-                            keywordItem = keywordItems_2_1.value;
-                            if (!consolidatedItems.contains(keywordItem.url)) {
-                                consolidatedItems.set(keywordItem.url, keywordItem);
+                        for (var keywordEntries_2 = (e_4 = void 0, __values(keywordEntries)), keywordEntries_2_1 = keywordEntries_2.next(); !keywordEntries_2_1.done; keywordEntries_2_1 = keywordEntries_2.next()) {
+                            keywordEntry = keywordEntries_2_1.value;
+                            if (!consolidatedEntries.contains(keywordEntry.url)) {
+                                consolidatedEntries.set(keywordEntry.url, keywordEntry);
                             }
                         }
                     }
-                    catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
                     finally {
                         try {
-                            if (keywordItems_2_1 && !keywordItems_2_1.done && (_b = keywordItems_2.return)) _b.call(keywordItems_2);
+                            if (keywordEntries_2_1 && !keywordEntries_2_1.done && (_b = keywordEntries_2.return)) _b.call(keywordEntries_2);
                         }
-                        finally { if (e_5) throw e_5.error; }
+                        finally { if (e_4) throw e_4.error; }
                     }
                 }
             }
-            catch (e_4_1) { e_4 = { error: e_4_1 }; }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
             finally {
                 try {
                     if (keywordFiles_1_1 && !keywordFiles_1_1.done && (_a = keywordFiles_1.return)) _a.call(keywordFiles_1);
                 }
-                finally { if (e_4) throw e_4.error; }
+                finally { if (e_3) throw e_3.error; }
             }
-            return consolidatedItems.values.sort(HighsoftWebsearch.KeywordURLSet.sorter);
+            return consolidatedEntries.values.sort(HighsoftWebSearch.KeywordURLSet.sorter);
         };
         Search.prototype.download = function (searchTerm) {
-            return HighsoftWebsearch.Download
+            return HighsoftWebSearch.Download
                 .fromURL(this.basePath + searchTerm + '.txt')
-                .then(function (download) { return new HighsoftWebsearch.KeywordURLSet(searchTerm, download.content); })
-                .catch(function () { return new HighsoftWebsearch.KeywordURLSet(searchTerm); });
+                .then(function (download) { return new HighsoftWebSearch.KeywordURLSet(searchTerm, download.content); })
+                .catch(function () { return new HighsoftWebSearch.KeywordURLSet(searchTerm); });
         };
         Search.prototype.find = function (query) {
-            var e_6, _a;
-            this._query = query;
+            var e_5, _a;
+            var _this = this;
             var downloadPromises = [];
-            var terms = this._terms = HighsoftWebsearch.KeywordFilter.getWords(query);
+            var terms = this._terms = HighsoftWebSearch.KeywordFilter.getWords(query);
             var term;
             try {
                 for (var terms_1 = __values(terms), terms_1_1 = terms_1.next(); !terms_1_1.done; terms_1_1 = terms_1.next()) {
@@ -584,29 +534,87 @@ var HighsoftWebsearch;
                     downloadPromises.push(this.download(term));
                 }
             }
-            catch (e_6_1) { e_6 = { error: e_6_1 }; }
+            catch (e_5_1) { e_5 = { error: e_5_1 }; }
             finally {
                 try {
                     if (terms_1_1 && !terms_1_1.done && (_a = terms_1.return)) _a.call(terms_1);
                 }
-                finally { if (e_6) throw e_6.error; }
+                finally { if (e_5) throw e_5.error; }
             }
             return Promise
                 .all(downloadPromises)
-                .then(this.consolidate)
+                .then(function (keywordEntries) { return _this.consolidate(keywordEntries); })
+                .then(function (keywordEntries) {
+                _this._query = query;
+                return keywordEntries;
+            })
                 .catch(function () { return []; });
+        };
+        Search.prototype.preview = function (entry) {
+            var terms = (this.terms || []).slice();
+            return HighsoftWebSearch.Download
+                .fromURL(entry.url)
+                .then(function (download) {
+                var e_6, _a;
+                var downloadDocument = document.createElement('html');
+                downloadDocument.innerHTML = download.content;
+                var downloadBody = downloadDocument.getElementsByTagName('body')[0];
+                if (typeof downloadBody === 'undefined') {
+                    return '';
+                }
+                var preview = HighsoftWebSearch.KeywordFilter.getWords(downloadBody.innerText);
+                var previewLowerCase = preview.map(function (word) { return word.toLowerCase(); });
+                var previewIndex = -1;
+                var previewStart = 0;
+                var previewEnd = 0;
+                try {
+                    for (var terms_2 = __values(terms), terms_2_1 = terms_2.next(); !terms_2_1.done; terms_2_1 = terms_2.next()) {
+                        var term = terms_2_1.value;
+                        previewIndex = previewLowerCase.indexOf(term.toLowerCase());
+                        if (previewIndex >= 0) {
+                            break;
+                        }
+                    }
+                }
+                catch (e_6_1) { e_6 = { error: e_6_1 }; }
+                finally {
+                    try {
+                        if (terms_2_1 && !terms_2_1.done && (_a = terms_2.return)) _a.call(terms_2);
+                    }
+                    finally { if (e_6) throw e_6.error; }
+                }
+                if (previewIndex < 10) {
+                    previewEnd = 21;
+                }
+                else {
+                    previewEnd = previewIndex + 11;
+                    previewStart = previewIndex - 10;
+                }
+                if (previewIndex === -1) {
+                    return preview.slice(previewStart, previewEnd).join(' ');
+                }
+                return (preview.slice(previewStart, previewIndex).join(' ') +
+                    ' <b>' + preview[previewIndex] + '</b> ' +
+                    preview.slice((previewIndex + 1), previewEnd).join(' '));
+            })
+                .catch(function () { return ''; });
         };
         return Search;
     }());
-    HighsoftWebsearch.Search = Search;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.Search = Search;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     var COMMON_KEYWORDS = [
         'a', 'all', 'an', 'and', 'are', 'at', 'be', 'by', 'can', 'co', 'com',
         'could', 'from', 'had', 'has', 'have', 'https', 'i', 'if', 'in', 'is',
@@ -632,55 +640,50 @@ var HighsoftWebsearch;
         };
         return KeywordFilter;
     }());
-    HighsoftWebsearch.KeywordFilter = KeywordFilter;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.KeywordFilter = KeywordFilter;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));
 /*!*
  *
  *  Copyright (C) Highsoft AS
  *
  * */
-/*!*
- *
- *  Copyright (C) Highsoft AS
- *
- * */
-var HighsoftWebsearch;
-(function (HighsoftWebsearch) {
+var HighsoftWebSearch;
+(function (HighsoftWebSearch) {
     var KeywordURLSet = (function () {
         function KeywordURLSet(keyword, content) {
-            this._items = new HighsoftWebsearch.Dictionary();
+            this._entries = new HighsoftWebSearch.Dictionary();
             this._keyword = keyword;
             if (typeof content === 'string') {
-                this._items = content
+                this._entries = content
                     .split('\n')
                     .map(function (line) { return line.split('\t', 3); })
-                    .reduce(KeywordURLSet.reducer, this._items);
+                    .reduce(KeywordURLSet.reducer, this._entries);
             }
         }
-        KeywordURLSet.reducer = function (items, item) {
-            if (item.length < 3) {
-                return items;
+        KeywordURLSet.reducer = function (entries, values) {
+            if (values.length < 3) {
+                return entries;
             }
-            items.set(item[1], {
-                title: item[2],
-                url: item[1],
-                weight: parseInt(item[0])
+            entries.set(values[1], {
+                title: values[2],
+                url: values[1],
+                weight: parseInt(values[0])
             });
-            return items;
+            return entries;
         };
-        KeywordURLSet.sorter = function (itemA, itemB) {
-            var weightA = itemA.weight;
-            var weightB = itemB.weight;
+        KeywordURLSet.sorter = function (entryA, entryB) {
+            var weightA = entryA.weight;
+            var weightB = entryB.weight;
             if (weightA !== weightB) {
                 return (weightB - weightA);
             }
-            var urlA = itemA.url;
-            var urlB = itemB.url;
+            var urlA = entryA.url;
+            var urlB = entryB.url;
             return (urlA < urlB ? -1 : urlA > urlB ? 1 : 0);
         };
-        Object.defineProperty(KeywordURLSet.prototype, "items", {
+        Object.defineProperty(KeywordURLSet.prototype, "entries", {
             get: function () {
-                return this._items;
+                return this._entries;
             },
             enumerable: true,
             configurable: true
@@ -693,24 +696,24 @@ var HighsoftWebsearch;
             configurable: true
         });
         KeywordURLSet.prototype.addURL = function (weight, url, title) {
-            var items = this._items;
-            var item = items.get(url);
-            if (typeof item === 'undefined' ||
-                item.weight < weight) {
-                items.set(url, { title: title, url: url, weight: weight });
+            var entries = this._entries;
+            var entry = entries.get(url);
+            if (typeof entry === 'undefined' ||
+                entry.weight < weight) {
+                entries.set(url, { title: title, url: url, weight: weight });
             }
         };
         KeywordURLSet.prototype.containsURL = function (url) {
-            return this._items.contains(url);
+            return this._entries.contains(url);
         };
         KeywordURLSet.prototype.toString = function () {
-            var items = this._items;
-            return items.values
+            var entries = this._entries;
+            return entries.values
                 .sort(KeywordURLSet.sorter)
-                .map(function (item) { return (item.weight + '\t' + item.url + '\t' + item.title); })
+                .map(function (entry) { return (entry.weight + '\t' + entry.url + '\t' + entry.title); })
                 .join('\n');
         };
         return KeywordURLSet;
     }());
-    HighsoftWebsearch.KeywordURLSet = KeywordURLSet;
-})(HighsoftWebsearch || (HighsoftWebsearch = {}));
+    HighsoftWebSearch.KeywordURLSet = KeywordURLSet;
+})(HighsoftWebSearch || (HighsoftWebSearch = {}));

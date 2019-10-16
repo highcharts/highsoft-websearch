@@ -3,7 +3,7 @@
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     class Dictionary<T> {
         constructor(...dictionaries: Array<Dictionary<T>>);
         private _keys;
@@ -20,7 +20,7 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     function connect(basePath: string, inputElement: (string | HTMLInputElement), buttonElement: (string | HTMLElement), outputElement: (string | HTMLElement)): Controller;
 }
 /*!*
@@ -28,9 +28,9 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     class Controller {
-        static defaultResultRenderer(controller: Controller, item?: KeywordItem): (HTMLElement | undefined);
+        static defaultResultRenderer(controller: Controller, entry?: KeywordEntry): (HTMLElement | undefined);
         constructor(search: Search, inputElement: HTMLInputElement, outputElement: HTMLElement, buttonElement: HTMLElement);
         private _buttonElement;
         private _inputElement;
@@ -59,7 +59,7 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     class Download {
         static fromURL(url: string, timeout?: number): Promise<Download>;
         private constructor();
@@ -78,9 +78,9 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     interface ResultFormatter {
-        (search: Controller, item?: KeywordItem): (HTMLElement | undefined);
+        (controller: Controller, entry?: KeywordEntry): (HTMLElement | undefined);
     }
 }
 /*!*
@@ -88,9 +88,8 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     class Search {
-        static preview(item: KeywordItem, searchTerms: Array<string>): Promise<string>;
         constructor(basePath: string);
         private _basePath;
         private _query;
@@ -100,7 +99,8 @@ declare namespace HighsoftWebsearch {
         readonly terms: (Array<string> | undefined);
         private consolidate;
         download(searchTerm: string): Promise<KeywordURLSet>;
-        find(query: string): Promise<Array<KeywordItem>>;
+        find(query: string): Promise<Array<KeywordEntry>>;
+        preview(entry: KeywordEntry): Promise<string>;
     }
 }
 /*!*
@@ -108,7 +108,19 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
+    interface KeywordEntry {
+        title: string;
+        weight: number;
+        url: string;
+    }
+}
+/*!*
+ *
+ *  Copyright (C) Highsoft AS
+ *
+ * */
+declare namespace HighsoftWebSearch {
     class KeywordFilter {
         static commonFilter(keyword: string): boolean;
         static getWords(content: string): Array<string>;
@@ -120,26 +132,14 @@ declare namespace HighsoftWebsearch {
  *  Copyright (C) Highsoft AS
  *
  * */
-declare namespace HighsoftWebsearch {
-    interface KeywordItem {
-        title: string;
-        weight: number;
-        url: string;
-    }
-}
-/*!*
- *
- *  Copyright (C) Highsoft AS
- *
- * */
-declare namespace HighsoftWebsearch {
+declare namespace HighsoftWebSearch {
     class KeywordURLSet {
         private static reducer;
-        static sorter(itemA: KeywordItem, itemB: KeywordItem): number;
+        static sorter(entryA: KeywordEntry, entryB: KeywordEntry): number;
         constructor(keyword: string, content?: string);
-        private _items;
+        private _entries;
         private _keyword;
-        readonly items: Dictionary<KeywordItem>;
+        readonly entries: Dictionary<KeywordEntry>;
         readonly keyword: string;
         addURL(weight: number, url: string, title: string): void;
         containsURL(url: string): boolean;

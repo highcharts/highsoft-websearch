@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     export class Download {
 
         /* *

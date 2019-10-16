@@ -4,7 +4,7 @@
  *
  * */
 
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     /**
      * Dictionary implementation to support JavaScript keywords as keys.
      */

@@ -4,11 +4,11 @@
  *
  * */
 
-namespace HighsoftWebsearch {
+namespace HighsoftWebSearch {
     /**
      * Represents a search result in a keyword file.
      */
-    export interface KeywordItem {
+    export interface KeywordEntry {
         /**
          * Title of the URL.
          */
