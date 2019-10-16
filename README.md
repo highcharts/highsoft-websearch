@@ -12,16 +12,17 @@ Usage
 =====
 
 The following command creates a set of keyword files with weights, URLs, and
-titles of incpected URLs as tab separated values. If keyword files
-already exist, it will add only new findings.
+titles of inspected URLs. If keyword files already exist, it will add only new
+findings.
 
 ```sh
-highsoft-websearch --depth 3 --out ./local-keyword-directory/ https://my.website.example/
+highsoft-websearch --depth 3 --out ./keyword-directory/ https://my.website.example/
 ```
 
 Afterwards you have to upload the keyword directory to a server, where it can be
 accessed by web browsers. In your search site you include the client component,
-that can be found under 
+that can be found in the keyword directory or under
+`node_modules/highsoft-websearch/client/highsoft-websearch.js`.
 
 
 Options
