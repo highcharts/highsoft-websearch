@@ -8,8 +8,8 @@ declare namespace HighsoftWebSearch {
         constructor(...dictionaries: Array<Dictionary<T>>);
         private _keys;
         private _values;
-        readonly keys: Array<string>;
-        readonly values: Array<T>;
+        get keys(): Array<string>;
+        get values(): Array<T>;
         contains(key: string): boolean;
         get(key: string): (T | undefined);
         set(key: string, value?: T): void;
@@ -39,11 +39,12 @@ declare namespace HighsoftWebSearch {
         private _resultRenderer;
         private _search;
         private _timeout;
-        readonly buttonElement: HTMLElement;
-        readonly inputElement: HTMLInputElement;
-        readonly outputElement: HTMLElement;
-        resultRenderer: ResultFormatter;
-        readonly search: Search;
+        get buttonElement(): HTMLElement;
+        get inputElement(): HTMLInputElement;
+        get outputElement(): HTMLElement;
+        get resultRenderer(): ResultFormatter;
+        set resultRenderer(value: ResultFormatter);
+        get search(): Search;
         private onButtonClick;
         private onInputChange;
         private onInputKeyDown;
@@ -67,10 +68,10 @@ declare namespace HighsoftWebSearch {
         private _contentType;
         private _statusCode;
         private _url;
-        readonly content: string;
-        readonly contentType: string;
-        readonly statusCode: number;
-        readonly url: URL;
+        get content(): string;
+        get contentType(): string;
+        get statusCode(): number;
+        get url(): URL;
     }
 }
 /*!*
@@ -94,9 +95,9 @@ declare namespace HighsoftWebSearch {
         private _basePath;
         private _query;
         private _terms;
-        readonly basePath: string;
-        readonly query: (string | undefined);
-        readonly terms: (Array<string> | undefined);
+        get basePath(): string;
+        get query(): (string | undefined);
+        get terms(): (Array<string> | undefined);
         private consolidate;
         download(searchTerm: string): Promise<KeywordURLSet>;
         find(query: string): Promise<Array<KeywordEntry>>;
@@ -139,8 +140,8 @@ declare namespace HighsoftWebSearch {
         constructor(keyword: string, content?: string);
         private _entries;
         private _keyword;
-        readonly entries: Dictionary<KeywordEntry>;
-        readonly keyword: string;
+        get entries(): Dictionary<KeywordEntry>;
+        get keyword(): string;
         addURL(weight: number, url: string, title: string): void;
         containsURL(url: string): boolean;
         toString(): string;

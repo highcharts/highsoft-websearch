@@ -6,7 +6,7 @@
     "homepage": "https://github.com/highcharts/highsoft-websearch#readme",
     "main": "lib/index.js",
     "name": "highsoft-websearch",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "bin": {
         "highsoft-websearch": "bin/highsoft-websearch"
     },
@@ -14,9 +14,9 @@
         "url": "https://github.com/highcharts/highsoft-websearch/issues"
     },
     "devDependencies": {
-        "@types/node": "^12.7.11",
+        "@types/node": "^10.0.0",
         "husky": "^3.0.9",
-        "typescript": "^3.6.4"
+        "typescript": "^3.7.2"
     },
     "engines": {
         "node": ">=10"

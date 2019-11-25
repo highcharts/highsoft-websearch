@@ -176,13 +176,20 @@ export class Application {
         });
     }
 
-    private createDirectory (directoryPath: string, verbose?: boolean): Promise<void> {
+    private createDirectory (directoryPath: string, verbose?: boolean): Promise<string> {
 
         if (verbose) {
             Application.log(`Create ${directoryPath}`);
         }
 
         return new Promise((resolve, reject) => {
+            if (
+                FS.existsSync(directoryPath) &&
+                FS.statSync(directoryPath).isDirectory()
+            ) {
+                resolve(directoryPath);
+                return;
+            }
             FS.mkdir(
                 directoryPath,
                 { recursive: true },
@@ -191,7 +198,7 @@ export class Application {
                         reject(error);
                     }
                     else {
-                        resolve();
+                        resolve(directoryPath);
                     }
                 }
             );
