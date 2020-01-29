@@ -526,7 +526,7 @@ var HighsoftWebSearch;
             var e_5, _a;
             var _this = this;
             var downloadPromises = [];
-            var terms = this._terms = HighsoftWebSearch.KeywordFilter.getWords(query);
+            var terms = this._terms = HighsoftWebSearch.KeywordFilter.getWords(query.toLowerCase());
             var term;
             try {
                 for (var terms_1 = __values(terms), terms_1_1 = terms_1.next(); !terms_1_1.done; terms_1_1 = terms_1.next()) {

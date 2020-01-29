@@ -84,7 +84,7 @@ namespace HighsoftWebSearch {
         public find (query: string): Promise<Array<KeywordEntry>> {
 
             const downloadPromises: Array<Promise<KeywordURLSet>> = [];
-            const terms = this._terms = KeywordFilter.getWords(query);
+            const terms = this._terms = KeywordFilter.getWords(query.toLowerCase());
 
             let term: string;
 
