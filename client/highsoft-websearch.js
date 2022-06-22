@@ -256,10 +256,10 @@ var HighsoftWebSearch;
             configurable: true
         });
         Controller.prototype.onButtonClick = function (evt) {
-            clearTimeout(this._timeout);
             if (evt.target !== this._buttonElement) {
                 return;
             }
+            clearTimeout(this._timeout);
             this.onTimeout();
         };
         Controller.prototype.onInputChange = function (evt) {
@@ -274,11 +274,11 @@ var HighsoftWebSearch;
             }
         };
         Controller.prototype.onInputKeyDown = function (evt) {
-            clearTimeout(this._timeout);
             var inputElement = this._inputElement;
             if (evt.target !== inputElement) {
                 return;
             }
+            clearTimeout(this._timeout);
             if (evt.key === 'Enter') {
                 this.onButtonClick(evt);
                 return;

@@ -161,11 +161,11 @@ namespace HighsoftWebSearch {
 
         private onButtonClick (evt: Event): void {
 
-            clearTimeout(this._timeout);
-
             if (evt.target !== this._buttonElement) {
                 return;
             }
+
+            clearTimeout(this._timeout);
 
             this.onTimeout();
         }
@@ -188,13 +188,13 @@ namespace HighsoftWebSearch {
 
         private onInputKeyDown (evt: KeyboardEvent): void {
 
-            clearTimeout(this._timeout);
-
             const inputElement = this._inputElement;
 
             if (evt.target !== inputElement) {
                 return;
             }
+
+            clearTimeout(this._timeout);
 
             if (evt.key === 'Enter') {
                 this.onButtonClick(evt);
