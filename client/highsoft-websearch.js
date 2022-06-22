@@ -56,14 +56,14 @@ var HighsoftWebSearch;
             get: function () {
                 return this._keys.slice();
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Dictionary.prototype, "values", {
             get: function () {
                 return this._values.slice();
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Dictionary.prototype.contains = function (key) {
@@ -221,21 +221,21 @@ var HighsoftWebSearch;
             get: function () {
                 return this._buttonElement;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Controller.prototype, "inputElement", {
             get: function () {
                 return this._inputElement;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Controller.prototype, "outputElement", {
             get: function () {
                 return this._outputElement;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Controller.prototype, "resultRenderer", {
@@ -245,14 +245,14 @@ var HighsoftWebSearch;
             set: function (value) {
                 this._resultRenderer = value;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Controller.prototype, "search", {
             get: function () {
                 return this._search;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Controller.prototype.onButtonClick = function (evt) {
@@ -415,28 +415,28 @@ var HighsoftWebSearch;
             get: function () {
                 return this._content;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Download.prototype, "contentType", {
             get: function () {
                 return this._contentType;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Download.prototype, "statusCode", {
             get: function () {
                 return this._statusCode;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Download.prototype, "url", {
             get: function () {
                 return this._url;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         return Download;
@@ -463,21 +463,21 @@ var HighsoftWebSearch;
             get: function () {
                 return this._basePath;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Search.prototype, "query", {
             get: function () {
                 return this._query;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(Search.prototype, "terms", {
             get: function () {
                 return this._terms;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Search.prototype.consolidate = function (keywordFiles) {
@@ -685,14 +685,14 @@ var HighsoftWebSearch;
             get: function () {
                 return this._entries;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         Object.defineProperty(KeywordURLSet.prototype, "keyword", {
             get: function () {
                 return this._keyword;
             },
-            enumerable: true,
+            enumerable: false,
             configurable: true
         });
         KeywordURLSet.prototype.addURL = function (weight, url, title) {
